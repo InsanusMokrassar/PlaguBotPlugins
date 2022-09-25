@@ -1,0 +1,17 @@
+project.version = "$version"
+project.group = "$group"
+
+apply from: "$publishGradlePath"
+
+dependencies {
+    implementation libs.kotlin
+    api libs.kotlin.serialization
+    testImplementation libs.kotlin.test.common
+    testImplementation libs.kotlin.test.annotations.common
+    testImplementation libs.kotlin.test.junit
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}

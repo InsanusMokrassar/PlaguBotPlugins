@@ -7,11 +7,10 @@ buildscript {
     }
 
     dependencies {
-        classpath libs.android.tools.build
-        classpath libs.android.dexcount
         classpath libs.kotlin.gradle.plugin
         classpath libs.kotlin.serialization.plugin
         classpath libs.kotlin.dokka.plugin
+        classpath libs.gh.release.plugin
     }
 }
 

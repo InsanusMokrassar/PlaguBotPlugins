@@ -13,8 +13,8 @@ That is a template for Kotlin Multiplatform Projects. How to use it:
 # header note.
 sdk.dir=/your/path/to/android/sdk
 ```
-* Replace in a whole project `project_group` by your group
-* Replace in a whole project `project_name` by your **ROOT** project name
+* Replace in a whole project `dev.inmo` by your group
+* Replace in a whole project `plagubot.plugins` by your **ROOT** project name
 * Update your subproject packages. It is not critical, but recommended especially in case you plan to publish your
   library
 
