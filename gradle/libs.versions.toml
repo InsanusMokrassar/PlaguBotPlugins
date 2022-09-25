@@ -6,6 +6,8 @@ kotlin-serialization = "1.4.0"
 plagubot = "2.3.3"
 kslog = "0.5.2"
 
+tgbotapi-libraries = "0.5.4"
+
 gh-release = "2.4.1"
 
 [libraries]
@@ -18,6 +20,8 @@ kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version
 
 plagubot-plugin = { module = "dev.inmo:plagubot.plugin", version.ref = "plagubot" }
 kslog = { module = "dev.inmo:kslog", version.ref = "kslog" }
+
+tgbotapi-libraries-admins-plagubot = { module = "dev.inmo:tgbotapi.libraries.cache.admins.plagubot", version.ref = "tgbotapi-libraries" }
 
 # buildscript classpaths
 

@@ -1,7 +1,8 @@
 rootProject.name = 'plagubot.plugins'
 
 String[] includes = [
-    ":commands"
+    ":commands",
+    ":captcha",
 ]
 
 
