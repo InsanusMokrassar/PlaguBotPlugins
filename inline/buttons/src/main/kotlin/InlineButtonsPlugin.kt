@@ -47,7 +47,14 @@ interface InlineButtonsDrawer {
     val keys: List<String>?
         get() = listOf(InlineButtonsKeys.Settings)
 
-    suspend fun BehaviourContext.drawSettings(chatId: ChatId, userId: UserId, messageId: MessageId, key: String? = null)
+    suspend fun BehaviourContext.drawSettings(chatId: ChatId, userId: UserId, messageId: MessageId, key: String?)
+
+    suspend fun BehaviourContext.drawSettings(
+        chatId: ChatId,
+        userId: UserId,
+        messageId: MessageId
+    ) = drawSettings(chatId, userId, messageId, null)
+
 }
 
 @Serializable
