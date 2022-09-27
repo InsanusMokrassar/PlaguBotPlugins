@@ -195,7 +195,7 @@ class BanPlugin : Plugin {
                     chatId: ChatId,
                     userId: UserId,
                     messageId: MessageIdentifier,
-                    key: String
+                    key: String?
                 ) {
                     val adminsApi = get<AdminsCacheAPI>()
                     val settings = chatsSettings.get(chatId) ?: ChatSettings()
