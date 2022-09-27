@@ -4,6 +4,7 @@ String[] includes = [
     ":commands",
     ":captcha",
     ":inline_buttons",
+    ":welcome",
 ]
 
 
