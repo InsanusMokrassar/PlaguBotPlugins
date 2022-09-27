@@ -1,6 +1,6 @@
 # PlaguBotCommandsPlugin
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/dev.inmo/plagubot.plugins.inline_buttons/badge.svg)](https://maven-badges.herokuapp.com/maven-central/dev.inmo/plagubot.plugins.inline_buttons)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/dev.inmo/plagubot.plugins.inline.buttons/badge.svg)](https://maven-badges.herokuapp.com/maven-central/dev.inmo/plagubot.plugins.inline.buttons)
 
 This plugin has been created for centralized work with inline buttons in some message as settings.
 
@@ -11,7 +11,7 @@ Add dependency:
 Gradle:
 
 ```groovy
-api "dev.inmo:plagubot.plugins.inline_buttons:$inline_buttons_version"
+api "dev.inmo:plagubot.plugins.inline.buttons:$inline.buttons_version"
 ```
 
 Maven:
@@ -19,8 +19,8 @@ Maven:
 ```xml
 <dependency>
     <groupId>dev.inmo</groupId>
-    <artifactId>plagubot.plugins.inline_buttons</artifactId>
-    <version>${inline_buttons_version}</version>
+    <artifactId>plagubot.plugins.inline.buttons</artifactId>
+    <version>${inline.buttons_version}</version>
 </dependency>
 ```
 
@@ -32,7 +32,7 @@ End user should include in his plugins section next line:
 ...
 "plugins": [
   ...,
-  "dev.inmo.plagubot.plugins.inline_buttons.InlineButtonsPlugin"
+  "dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsPlugin"
 ],
 ...
 ```

@@ -1,4 +1,4 @@
-package dev.inmo.plagubot.plugins.inline_buttons.utils
+package dev.inmo.plagubot.plugins.inline.buttons.utils
 
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardRowBuilder
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton

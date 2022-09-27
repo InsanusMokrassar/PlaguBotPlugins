@@ -14,10 +14,10 @@ import dev.inmo.plagubot.plugins.bans.models.WorkMode
 import dev.inmo.plagubot.plugins.bans.utils.checkBanPluginEnabled
 import dev.inmo.plagubot.plugins.commands.BotCommandFullInfo
 import dev.inmo.plagubot.plugins.commands.CommandsKeeperKey
-import dev.inmo.plagubot.plugins.inline_buttons.InlineButtonsProvider
-import dev.inmo.plagubot.plugins.inline_buttons.inlineButtonsPlugin
-import dev.inmo.plagubot.plugins.inline_buttons.utils.extractChatIdAndData
-import dev.inmo.plagubot.plugins.inline_buttons.utils.inlineDataButton
+import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsProvider
+import dev.inmo.plagubot.plugins.inline.buttons.inlineButtonsPlugin
+import dev.inmo.plagubot.plugins.inline.buttons.utils.extractChatIdAndData
+import dev.inmo.plagubot.plugins.inline.buttons.utils.inlineDataButton
 import dev.inmo.tgbotapi.abstracts.FromUser
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.chat.members.*

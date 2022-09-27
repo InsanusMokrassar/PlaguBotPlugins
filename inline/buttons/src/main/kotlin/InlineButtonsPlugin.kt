@@ -1,8 +1,8 @@
-package dev.inmo.plagubot.plugins.inline_buttons
+package dev.inmo.plagubot.plugins.inline.buttons
 
 import dev.inmo.plagubot.*
-import dev.inmo.plagubot.plugins.inline_buttons.utils.extractChatIdAndData
-import dev.inmo.plagubot.plugins.inline_buttons.utils.inlineDataButton
+import dev.inmo.plagubot.plugins.inline.buttons.utils.extractChatIdAndData
+import dev.inmo.plagubot.plugins.inline.buttons.utils.inlineDataButton
 import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
