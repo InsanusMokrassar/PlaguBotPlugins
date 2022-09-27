@@ -1,0 +1,14 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm"
+    id "org.jetbrains.kotlin.plugin.serialization"
+}
+
+apply from: "$javaProjectPresetPath"
+
+dependencies {
+    api libs.plagubot.plugin
+    api libs.kslog
+    api libs.tgbotapi.libraries.admins.plagubot
+    api project (":plagubot.plugins.commands")
+    api project (":plagubot.plugins.inline_buttons")
+}

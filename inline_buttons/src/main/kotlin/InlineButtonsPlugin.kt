@@ -107,9 +107,9 @@ class InlineButtonsPlugin : InlineButtonsProvider, Plugin{
     }
 }
 
-val Scope.settingsPlugin
+val Scope.inlineButtonsPlugin
     get() = getOrNull<InlineButtonsPlugin>()
-val Koin.settingsPlugin
+val Koin.inlineButtonsPlugin
     get() = getOrNull<InlineButtonsPlugin>()
 
 
