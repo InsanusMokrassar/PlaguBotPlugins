@@ -14,7 +14,7 @@ import dev.inmo.plagubot.plugins.bans.models.WorkMode
 import dev.inmo.plagubot.plugins.bans.utils.checkBanPluginEnabled
 import dev.inmo.plagubot.plugins.commands.BotCommandFullInfo
 import dev.inmo.plagubot.plugins.commands.CommandsKeeperKey
-import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsProvider
+import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
 import dev.inmo.plagubot.plugins.inline.buttons.inlineButtonsPlugin
 import dev.inmo.plagubot.plugins.inline.buttons.utils.extractChatIdAndData
 import dev.inmo.plagubot.plugins.inline.buttons.utils.inlineDataButton
@@ -176,10 +176,10 @@ class BanPlugin : Plugin {
     override fun Module.setupDI(database: Database, params: JsonObject) {
         single(named("warningsTable")) { database.warningsTable }
         single(named("chatsSettingsTable")) { database.chatsSettingsTable }
-        single<InlineButtonsProvider>(named("BanPluginSettingsProvider")) {
+        single<InlineButtonsDrawer>(named("BanPluginSettingsProvider")) {
             val chatsSettings = get<ChatsSettingsTable>(named("chatsSettingsTable"))
 
-            object : InlineButtonsProvider {
+            object : InlineButtonsDrawer {
                 override val name: String
                     get() = "BanPlugin"
                 override val id: String
@@ -194,7 +194,8 @@ class BanPlugin : Plugin {
                 override suspend fun BehaviourContext.drawSettings(
                     chatId: ChatId,
                     userId: UserId,
-                    messageId: MessageIdentifier
+                    messageId: MessageIdentifier,
+                    key: String
                 ) {
                     val adminsApi = get<AdminsCacheAPI>()
                     val settings = chatsSettings.get(chatId) ?: ChatSettings()
@@ -248,7 +249,7 @@ class BanPlugin : Plugin {
 
                     updateSettings(adminsApi, chatsSettings, messageDataCallbackQuery)
 
-                    drawSettings(chatId, userId, messageDataCallbackQuery.message.messageId)
+                    drawSettings(chatId, userId, messageDataCallbackQuery.message.messageId,)
                 }
             }
         }
@@ -304,7 +305,7 @@ class BanPlugin : Plugin {
     override suspend fun BehaviourContext.setupBotPlugin(koin: Koin) {
         val warningsRepository = koin.get<WarningsTable>(named("warningsTable"))
         val chatsSettings = koin.get<ChatsSettingsTable>(named("chatsSettingsTable"))
-        val settingsProvider = koin.get<InlineButtonsProvider>(named("BanPluginSettingsProvider"))
+        val settingsProvider = koin.get<InlineButtonsDrawer>(named("BanPluginSettingsProvider"))
         koin.inlineButtonsPlugin ?.register(settingsProvider)
         val adminsApi = koin.get<AdminsCacheAPI>()
 
@@ -778,7 +779,7 @@ class BanPlugin : Plugin {
             val chatId = updateSettings(adminsApi, chatsSettings, it) ?: return@onMessageDataCallbackQuery
 
             with(settingsProvider) {
-                drawSettings(chatId, it.user.id, it.message.messageId)
+                drawSettings(chatId, it.user.id, it.message.messageId,)
             }
         }
     }

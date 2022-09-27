@@ -1,8 +1,7 @@
 package dev.inmo.plagubot.plugins.inline.buttons
 
 import dev.inmo.plagubot.*
-import dev.inmo.plagubot.plugins.inline.buttons.utils.extractChatIdAndData
-import dev.inmo.plagubot.plugins.inline.buttons.utils.inlineDataButton
+import dev.inmo.plagubot.plugins.inline.buttons.utils.*
 import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
@@ -25,30 +24,52 @@ import org.koin.core.Koin
 import org.koin.core.module.Module
 import org.koin.core.scope.Scope
 
-interface InlineButtonsProvider{
+/**
+ * Buttons drawer with context info
+ */
+interface InlineButtonsDrawer {
+    /**
+     * Title of drawer to show on buttons
+     */
     val name: String
+
+    /**
+     * Identifier of drawer which will be used on button as data
+     */
     val id: String
 
-    suspend fun BehaviourContext.drawSettings(chatId: ChatId, userId: UserId, messageId: MessageId)
+    /**
+     * Supported keys of drawer. If null - this drawer will be used with all keys
+     */
+    val keys: List<String>?
+        get() = null
+
+    suspend fun BehaviourContext.drawSettings(chatId: ChatId, userId: UserId, messageId: MessageId, key: String? = null)
 }
 
 @Serializable
-class InlineButtonsPlugin : InlineButtonsProvider, Plugin{
-    override val id: String = "settings"
-    override val name: String = "Settings"
-    private val providersMap = mutableMapOf<String, InlineButtonsProvider>()
+class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
+    override val id: String = "inline_buttons"
+    override val name: String = "Back"
+    private val providersMap = mutableMapOf<String, InlineButtonsDrawer>()
 
-    fun register(provider: InlineButtonsProvider){
+    fun register(provider: InlineButtonsDrawer){
         providersMap[provider.id] = provider
     }
 
-    private fun extractChatIdAndProviderId(data: String): Pair<ChatId, InlineButtonsProvider?> {
+    private fun extractChatIdAndProviderId(data: String): Pair<ChatId, InlineButtonsDrawer?> {
         val (chatId, providerId) = extractChatIdAndData(data)
         val provider = providersMap[providerId]
         return chatId to provider
     }
-    private fun createProvidersInlineKeyboard(chatId: ChatId) = inlineKeyboard {
-        providersMap.values.chunked(4).forEach {
+    private fun createProvidersInlineKeyboard(chatId: ChatId, key: String?) = inlineKeyboard {
+        providersMap.values.let {
+            key ?.let { _ ->
+                it.filter {
+                    it.keys ?.contains(key) != false
+                }
+            } ?: it
+        }.chunked(4).forEach {
             row {
                 it.forEach { provider ->
                     inlineDataButton(provider.name, chatId, provider.id)
@@ -57,9 +78,17 @@ class InlineButtonsPlugin : InlineButtonsProvider, Plugin{
         }
     }
 
-    override suspend fun BehaviourContext.drawSettings(chatId: ChatId, userId: UserId, messageId: MessageId){
-        println(" Test $chatId $userId ")
-        editMessageReplyMarkup(chatId, messageId, replyMarkup = createProvidersInlineKeyboard(chatId))
+    override suspend fun BehaviourContext.drawSettings(
+        chatId: ChatId,
+        userId: UserId,
+        messageId: MessageId,
+        key: String?
+    ) {
+        editMessageReplyMarkup(
+            chatId,
+            messageId,
+            replyMarkup = createProvidersInlineKeyboard(chatId, key)
+        )
     }
 
     override fun Module.setupDI(database: Database, params: JsonObject) {
@@ -74,7 +103,7 @@ class InlineButtonsPlugin : InlineButtonsProvider, Plugin{
                     runCatching {
                         send(
                             it.user.id,
-                            replyMarkup = createProvidersInlineKeyboard(commandMessage.chat.id)
+                            replyMarkup = createProvidersInlineKeyboard(commandMessage.chat.id, InlineButtonsKeys.Settings)
                         ) {
                             +"Settings for chat "
                             code(commandMessage.chat.requireGroupChat().title)
@@ -101,7 +130,7 @@ class InlineButtonsPlugin : InlineButtonsProvider, Plugin{
                 return@onMessageDataCallbackQuery
             }
             with (provider){
-                drawSettings(chatId, it.user.id, it.message.messageId)
+                drawSettings(chatId, it.user.id, it.message.messageId,)
             }
         }
     }
