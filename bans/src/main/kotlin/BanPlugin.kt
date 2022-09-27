@@ -49,8 +49,6 @@ import dev.inmo.tgbotapi.utils.*
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.Koin
 import org.koin.core.module.Module
@@ -73,15 +71,6 @@ private const val countWarningsCommand = "ban_count_warns"
 internal const val disableCommand = "disable_ban_plugin"
 internal const val enableCommand = "enable_ban_plugin"
 internal const val banCommand = "ban"
-
-private val serializationModule = SerializersModule {
-    polymorphic(WorkMode::class) {
-        subclass(WorkMode.EnabledForAdmins.Default::class, WorkMode.EnabledForAdmins.serializer())
-        subclass(WorkMode.EnabledForUsers.Default::class, WorkMode.EnabledForUsers.serializer())
-        subclass(WorkMode.Enabled::class, WorkMode.Enabled.serializer())
-        subclass(WorkMode.Disabled::class, WorkMode.Disabled.serializer())
-    }
-}
 
 @Serializable
 class BanPlugin : Plugin {
