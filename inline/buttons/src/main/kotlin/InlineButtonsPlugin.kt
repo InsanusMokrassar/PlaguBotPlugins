@@ -44,8 +44,8 @@ interface InlineButtonsDrawer {
      * Default value is a list with single parameter [InlineButtonsKeys.Settings], which
      * means that this drawer will be used only in settings request
      */
-    val keys: List<String>?
-        get() = listOf(InlineButtonsKeys.Settings)
+    val keys: Set<String?>?
+        get() = setOf(InlineButtonsKeys.Settings)
 
     suspend fun BehaviourContext.drawSettings(chatId: ChatId, userId: UserId, messageId: MessageId, key: String?)
 
