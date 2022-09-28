@@ -191,7 +191,7 @@ class BanPlugin : Plugin {
                         "❌"
                     }
 
-                override suspend fun BehaviourContext.drawSettings(
+                override suspend fun BehaviourContext.drawInlineButtons(
                     chatId: ChatId,
                     userId: UserId,
                     messageId: MessageIdentifier,
@@ -249,7 +249,7 @@ class BanPlugin : Plugin {
 
                     updateSettings(adminsApi, chatsSettings, messageDataCallbackQuery)
 
-                    drawSettings(chatId, userId, messageDataCallbackQuery.message.messageId,)
+                    drawInlineButtons(chatId, userId, messageDataCallbackQuery.message.messageId,)
                 }
             }
         }
@@ -779,7 +779,7 @@ class BanPlugin : Plugin {
             val chatId = updateSettings(adminsApi, chatsSettings, it) ?: return@onMessageDataCallbackQuery
 
             with(settingsProvider) {
-                drawSettings(chatId, it.user.id, it.message.messageId,)
+                drawInlineButtons(chatId, it.user.id, it.message.messageId,)
             }
         }
     }

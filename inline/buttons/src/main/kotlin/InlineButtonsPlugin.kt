@@ -23,6 +23,7 @@ import org.jetbrains.exposed.sql.Database
 import org.koin.core.Koin
 import org.koin.core.module.Module
 import org.koin.core.scope.Scope
+import org.koin.dsl.binds
 
 /**
  * Buttons drawer with context info
@@ -47,13 +48,18 @@ interface InlineButtonsDrawer {
     val keys: Set<String?>?
         get() = setOf(InlineButtonsKeys.Settings)
 
-    suspend fun BehaviourContext.drawSettings(chatId: ChatId, userId: UserId, messageId: MessageId, key: String?)
+    /**
+     * This method will be called when message editing will be called. It is assumed that the drawer will
+     * edit message by itself. In case you want to provide work with "Back" button, you should retrieve [InlineButtonsDrawer]
+     * from [Koin]
+     */
+    suspend fun BehaviourContext.drawInlineButtons(chatId: ChatId, userId: UserId, messageId: MessageId, key: String?)
 
-    suspend fun BehaviourContext.drawSettings(
+    suspend fun BehaviourContext.drawInlineButtons(
         chatId: ChatId,
         userId: UserId,
         messageId: MessageId
-    ) = drawSettings(chatId, userId, messageId, null)
+    ) = drawInlineButtons(chatId, userId, messageId, null)
 
 }
 
@@ -88,7 +94,7 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
         }
     }
 
-    override suspend fun BehaviourContext.drawSettings(
+    override suspend fun BehaviourContext.drawInlineButtons(
         chatId: ChatId,
         userId: UserId,
         messageId: MessageId,
@@ -102,7 +108,9 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
     }
 
     override fun Module.setupDI(database: Database, params: JsonObject) {
-        single { this@InlineButtonsPlugin }
+        single { this@InlineButtonsPlugin } binds arrayOf(
+            InlineButtonsDrawer::class
+        )
     }
 
     override suspend fun BehaviourContext.setupBotPlugin(koin: Koin) {
@@ -140,7 +148,7 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
                 return@onMessageDataCallbackQuery
             }
             with (provider){
-                drawSettings(chatId, it.user.id, it.message.messageId,)
+                drawInlineButtons(chatId, it.user.id, it.message.messageId, InlineButtonsKeys.Settings)
             }
         }
     }
