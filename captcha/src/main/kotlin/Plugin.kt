@@ -2,6 +2,8 @@ package dev.inmo.plagubot.plugins.captcha
 
 import com.benasher44.uuid.uuid4
 import dev.inmo.micro_utils.coroutines.*
+import dev.inmo.micro_utils.koin.singleWithRandomQualifier
+import dev.inmo.micro_utils.koin.singleWithRandomQualifierAndBinds
 import dev.inmo.micro_utils.repos.create
 import dev.inmo.plagubot.Plugin
 import dev.inmo.plagubot.plugins.captcha.cas.CASChecker
@@ -9,8 +11,11 @@ import dev.inmo.plagubot.plugins.captcha.cas.KtorCASChecker
 import dev.inmo.plagubot.plugins.captcha.db.CaptchaChatsSettingsRepo
 import dev.inmo.plagubot.plugins.captcha.provider.*
 import dev.inmo.plagubot.plugins.captcha.settings.ChatSettings
+import dev.inmo.plagubot.plugins.captcha.settings.InlineSettings
 import dev.inmo.plagubot.plugins.commands.BotCommandFullInfo
 import dev.inmo.plagubot.plugins.commands.CommandsKeeperKey
+import dev.inmo.plagubot.plugins.commands.CommandsPlugin.setupBotPlugin
+import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
 import dev.inmo.tgbotapi.extensions.api.chat.members.*
 import dev.inmo.tgbotapi.extensions.api.delete
 import dev.inmo.tgbotapi.extensions.api.deleteMessage
@@ -149,12 +154,20 @@ class CaptchaBotPlugin : Plugin {
         } binds arrayOf(
             CASChecker::class
         )
+
+        single { InlineSettings(get(), get(), get(), get()) }
+        singleWithRandomQualifier<InlineButtonsDrawer> { get<InlineSettings>() }
     }
 
     override suspend fun BehaviourContext.setupBotPlugin(koin: Koin) {
         val repo: CaptchaChatsSettingsRepo by koin.inject()
         val adminsAPI = koin.getOrNull<AdminsCacheAPI>()
         val casChecker = koin.get<CASChecker>()
+        val inlineSettings = koin.get<InlineSettings>()
+
+        with(inlineSettings) {
+            setupListeners()
+        }
 
         suspend fun Chat.settings() = repo.getById(id) ?: repo.create(ChatSettings(id)).first()
 

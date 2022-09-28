@@ -9,6 +9,7 @@ dependencies {
     api libs.plagubot.plugin
     api libs.tgbotapi.libraries.admins.plagubot
     api libs.kslog
+    api libs.microutils.koin
     api project(":plagubot.plugins.commands")
     api project(":plagubot.plugins.inline.buttons")
 }

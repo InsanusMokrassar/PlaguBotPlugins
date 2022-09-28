@@ -5,6 +5,7 @@ kotlin-serialization = "1.4.0"
 
 plagubot = "2.3.3"
 kslog = "0.5.2"
+microutils = "0.12.16"
 
 tgbotapi-libraries = "0.5.4"
 
@@ -20,6 +21,7 @@ kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version
 
 plagubot-plugin = { module = "dev.inmo:plagubot.plugin", version.ref = "plagubot" }
 kslog = { module = "dev.inmo:kslog", version.ref = "kslog" }
+microutils-koin = { module = "dev.inmo:micro_utils.koin", version.ref = "microutils" }
 
 tgbotapi-libraries-admins-plagubot = { module = "dev.inmo:tgbotapi.libraries.cache.admins.plagubot", version.ref = "tgbotapi-libraries" }
 
