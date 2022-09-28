@@ -200,6 +200,7 @@ class InlineSettings(
         }
         suspend fun defaultProviderNumberEditListener(
             data: String,
+            title: String,
             minMax: IntRange? = null,
             onComplete: suspend BehaviourContext.(ChatSettings, MessageDataCallbackQuery) -> Unit = { it, query ->
                 edit(
@@ -215,11 +216,11 @@ class InlineSettings(
                 val chatSettings = chatsSettingsRepo.getById(chatId)
 
                 val shouldMessage by lazy {
-                    "You should type number${if (minMax == null) "" else " in range $minMax"} or use /cancel"
+                    "$title: You should type number${if (minMax == null) "" else " in range $minMax"} or use /cancel"
                 }
 
                 val sentMessage = reply(it.message) {
-                    +"Type number${if (minMax == null) "" else " in range $minMax"} or use /cancel"
+                    +"$title: Type number${if (minMax == null) "" else " in range $minMax"} or use /cancel"
                 }
 
                 answer(it)
@@ -330,6 +331,7 @@ class InlineSettings(
 
         defaultProviderNumberEditListener(
             providerCaptchaTimeData,
+            "Captcha solution time (in seconds)",
             15 .. 300
         ) {
             copy(
@@ -349,6 +351,7 @@ class InlineSettings(
 
         defaultProviderNumberEditListener(
             expressionOperandMaxData,
+            "Max operand value",
             1 .. 1000
         ) {
             copy(
@@ -364,6 +367,7 @@ class InlineSettings(
 
         defaultProviderNumberEditListener(
             expressionOperationsData,
+            "Operations amount",
             2 .. 10
         ) {
             copy(
@@ -379,6 +383,7 @@ class InlineSettings(
 
         defaultProviderNumberEditListener(
             expressionAnswersData,
+            "Presented answers amount",
             1 .. 10
         ) {
             copy(
@@ -394,6 +399,7 @@ class InlineSettings(
 
         defaultProviderNumberEditListener(
             expressionAttemptsData,
+            "Available attempts amount",
             1 .. 10
         ) {
             copy(
