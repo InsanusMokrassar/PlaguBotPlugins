@@ -1,8 +1,7 @@
 package dev.inmo.plagubot.plugins.inline.buttons.utils
 
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardRowBuilder
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.types.ChatId
 
 fun extractChatIdAndData(data: String): Pair<ChatId, String>? {
@@ -24,3 +23,7 @@ fun InlineKeyboardRowBuilder.drawerDataButton(drawer: InlineButtonsDrawer, chatI
     drawer.name,
     createChatIdAndDataInlineButtonData(chatId, drawer.id)
 )
+
+fun InlineKeyboardBuilder.drawerDataButtonRow(drawer: InlineButtonsDrawer, chatId: ChatId) = row {
+    drawerDataButton(drawer, chatId)
+}
