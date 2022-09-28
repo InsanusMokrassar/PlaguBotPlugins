@@ -461,7 +461,7 @@ data class ExpressionCaptchaProvider(
             }
 
             var leftAttempts = attempts
-            return waitMessageDataCallbackQuery().takeWhile { leftAttempts > 0 }.map { query ->
+            return waitMessageDataCallbackQuery().takeWhile { leftAttempts > 0 }.mapNotNull { query ->
                 val baseCheck = query.message.messageId == sentMessage.messageId
                 val dataCorrect = (query.user.id == user.id && query.data == correctAnswer)
                 val adminCanceled = (query.data == cancelData && (adminsApi?.isAdmin(
@@ -481,8 +481,10 @@ data class ExpressionCaptchaProvider(
                     leftAttempts--
                     if (leftAttempts > 0) {
                         answerCallbackQuery(query, leftRetriesText + leftAttempts)
+                        return@mapNotNull null
+                    } else {
+                        false
                     }
-                    false
                 }
             }.firstOrNull() ?: false
         }

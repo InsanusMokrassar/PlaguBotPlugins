@@ -155,7 +155,6 @@ class InlineSettings(
             row {
                 inlineDataButton("Back", it.chatId, id)
             }
-            drawerDataButtonRow(this@InlineSettings, it.chatId)
         }
     }
 
@@ -379,6 +378,21 @@ class InlineSettings(
         }
 
         defaultProviderNumberEditListener(
+            expressionAnswersData,
+            1 .. 10
+        ) {
+            copy(
+                captchaProvider = when (captchaProvider) {
+                    is ExpressionCaptchaProvider -> captchaProvider.copy(
+                        answers = it
+                    )
+                    is SimpleCaptchaProvider -> captchaProvider
+                    is SlotMachineCaptchaProvider -> captchaProvider
+                }
+            )
+        }
+
+        defaultProviderNumberEditListener(
             expressionAttemptsData,
             1 .. 10
         ) {
@@ -405,9 +419,9 @@ class InlineSettings(
     }
 
     companion object {
-        private const val captchaPrefix = "captcha_"
-        private const val captchaEnablePrefix = "${captchaPrefix}e"
-        private const val captchaDisablePrefix = "${captchaPrefix}d"
+        private const val captchaPrefix = "captcha"
+        private const val captchaEnablePrefix = "${captchaPrefix}_e"
+        private const val captchaDisablePrefix = "${captchaPrefix}_d"
 
         private const val enableData = captchaEnablePrefix
         private const val disableData = captchaDisablePrefix
