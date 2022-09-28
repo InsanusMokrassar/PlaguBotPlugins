@@ -3,6 +3,7 @@ package dev.inmo.plagubot.plugins.bans
 import com.benasher44.uuid.uuid4
 import dev.inmo.micro_utils.common.*
 import dev.inmo.micro_utils.coroutines.*
+import dev.inmo.micro_utils.koin.singleWithBinds
 import dev.inmo.micro_utils.repos.*
 import dev.inmo.plagubot.Plugin
 import dev.inmo.plagubot.plugins.bans.db.*
@@ -16,8 +17,7 @@ import dev.inmo.plagubot.plugins.commands.BotCommandFullInfo
 import dev.inmo.plagubot.plugins.commands.CommandsKeeperKey
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
 import dev.inmo.plagubot.plugins.inline.buttons.inlineButtonsPlugin
-import dev.inmo.plagubot.plugins.inline.buttons.utils.extractChatIdAndData
-import dev.inmo.plagubot.plugins.inline.buttons.utils.inlineDataButton
+import dev.inmo.plagubot.plugins.inline.buttons.utils.*
 import dev.inmo.tgbotapi.abstracts.FromUser
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.chat.members.*
@@ -74,184 +74,16 @@ internal const val banCommand = "ban"
 
 @Serializable
 class BanPlugin : Plugin {
-    private val toggleForUserData = "userToggle"
-    private val toggleForAdminData = "adminToggle"
-    private val allowWarnAdminsData = "allowWarnAdmins"
-    private val warnsCountData = "warns"
-
-    private suspend fun BehaviourContext.updateSettings(
-        adminsApi: AdminsCacheAPI,
-        chatsSettings: ChatsSettingsTable,
-        messageDataCallbackQuery: MessageDataCallbackQuery
-    ): ChatId? {
-        val (chatId, data) = extractChatIdAndData(messageDataCallbackQuery.data)
-        val userId = messageDataCallbackQuery.user.id
-
-        if (!adminsApi.isAdmin(chatId, userId)) {
-            return null
-        }
-
-        var needNewMessage = false
-
-        val settings = chatsSettings.get(chatId) ?: ChatSettings()
-
-        chatsSettings.set(
-            chatId,
-            settings.copy(
-                workMode = when (data) {
-                    toggleForUserData -> when (settings.workMode) {
-                        WorkMode.Disabled -> WorkMode.EnabledForUsers
-                        WorkMode.Enabled -> WorkMode.EnabledForAdmins
-                        WorkMode.EnabledForAdmins -> WorkMode.Enabled
-                        WorkMode.EnabledForUsers -> WorkMode.Disabled
-                    }
-                    toggleForAdminData -> when (settings.workMode) {
-                        WorkMode.Disabled -> WorkMode.EnabledForAdmins
-                        WorkMode.Enabled -> WorkMode.EnabledForUsers
-                        WorkMode.EnabledForAdmins -> WorkMode.Disabled
-                        WorkMode.EnabledForUsers -> WorkMode.Enabled
-                    }
-                    else -> settings.workMode
-                },
-                warningsUntilBan = when (data) {
-                    warnsCountData -> {
-                        needNewMessage = true
-                        oneOf(
-                            parallel {
-                                waitTextMessage (
-                                    SendTextMessage(
-                                        userId,
-                                        buildEntities {
-                                            +"Type count of warns until ban or "
-                                            botCommand("cancel")
-                                        }
-                                    )
-                                ).filter { message ->
-                                    (message.content.text.toIntOrNull() != null).also { passed ->
-                                        if (!passed) {
-                                            reply(
-                                                message
-                                            ) {
-                                                +"You should type some number instead or "
-                                                botCommand("cancel")
-                                                +" instead of \""
-                                                +message.content.textSources
-                                                +"\""
-                                            }
-                                        }
-                                    }
-                                }.first().content.text.toIntOrNull()
-                            },
-                            parallel {
-                                waitText().filter {
-                                    it.textSources.any {
-                                        it is BotCommandTextSource && it.command == "cancel"
-                                    }
-                                }.first()
-                                sendMessage(userId, "Canceled")
-                                null // if received command with cancel - just return null and next ?: will cancel everything
-                            }
-                        ) ?: return null
-                    }
-                    else -> settings.warningsUntilBan
-                },
-                allowWarnAdmins = when (data) {
-                    allowWarnAdminsData -> {
-                        !settings.allowWarnAdmins
-                    }
-                    else -> settings.allowWarnAdmins
-                }
-            )
-        )
-
-        if (needNewMessage) {
-            reply(messageDataCallbackQuery.message, "Updated")
-        }
-
-        answer(messageDataCallbackQuery, "Settings have been updated")
-
-        return chatId
-    }
 
     override fun Module.setupDI(database: Database, params: JsonObject) {
         single(named("warningsTable")) { database.warningsTable }
         single(named("chatsSettingsTable")) { database.chatsSettingsTable }
-        single<InlineButtonsDrawer>(named("BanPluginSettingsProvider")) {
-            val chatsSettings = get<ChatsSettingsTable>(named("chatsSettingsTable"))
-
-            object : InlineButtonsDrawer {
-                override val name: String
-                    get() = "BanPlugin"
-                override val id: String
-                    get() = "BanPlugin"
-                val Boolean.enabledSymbol
-                    get() = if (this) {
-                        "✅"
-                    } else {
-                        "❌"
-                    }
-
-                override suspend fun BehaviourContext.drawInlineButtons(
-                    chatId: ChatId,
-                    userId: UserId,
-                    messageId: MessageIdentifier,
-                    key: String?
-                ) {
-                    val adminsApi = get<AdminsCacheAPI>()
-                    val settings = chatsSettings.get(chatId) ?: ChatSettings()
-
-                    if (!adminsApi.isAdmin(chatId, userId)) {
-                        editMessageText(userId, messageId, "Ban settings are not supported for common users")
-                        return
-                    }
-
-                    runCatchingSafely {
-                        editMessageReplyMarkup(
-                            userId,
-                            messageId,
-                            replyMarkup = inlineKeyboard {
-                                row {
-                                    val forUsersEnabled = settings.workMode is WorkMode.EnabledForUsers
-                                    val usersEnabledSymbol = forUsersEnabled.enabledSymbol
-                                    inlineDataButton(
-                                        "$usersEnabledSymbol Users",
-                                        chatId,
-                                        toggleForUserData
-                                    )
-                                    val forAdminsEnabled = settings.workMode is WorkMode.EnabledForAdmins
-                                    val adminsEnabledSymbol = forAdminsEnabled.enabledSymbol
-                                    inlineDataButton(
-                                        "$adminsEnabledSymbol Admins",
-                                        chatId,
-                                        toggleForAdminData
-                                    )
-                                }
-                                row {
-                                    inlineDataButton(
-                                        "${settings.allowWarnAdmins.enabledSymbol} Warn admins",
-                                        chatId,
-                                        allowWarnAdminsData
-                                    )
-                                }
-                                row {
-                                    inlineDataButton(
-                                        "Warns count: ${settings.warningsUntilBan}",
-                                        chatId,
-                                        warnsCountData
-                                    )
-                                }
-                            }
-                        )
-                    }
-                    val messageDataCallbackQuery = waitMessageDataCallbackQuery().filter {
-                        it.user.id == userId && it.message.chat.id == userId && it.message.messageId == messageId
-                    }.firstOrNull() ?: return
-
-                    updateSettings(adminsApi, chatsSettings, messageDataCallbackQuery)
-
-                    drawInlineButtons(chatId, userId, messageDataCallbackQuery.message.messageId,)
-                }
-            }
+        singleWithBinds (named("BanPluginSettingsProvider")) {
+            BansInlineButtonsDrawer(
+                get(),
+                get(),
+                get<ChatsSettingsTable>(named("chatsSettingsTable"))
+            )
         }
 
         single(named(uuid4().toString())) {
@@ -305,8 +137,7 @@ class BanPlugin : Plugin {
     override suspend fun BehaviourContext.setupBotPlugin(koin: Koin) {
         val warningsRepository = koin.get<WarningsTable>(named("warningsTable"))
         val chatsSettings = koin.get<ChatsSettingsTable>(named("chatsSettingsTable"))
-        val settingsProvider = koin.get<InlineButtonsDrawer>(named("BanPluginSettingsProvider"))
-        koin.inlineButtonsPlugin ?.register(settingsProvider)
+        val settingsProvider = koin.get<BansInlineButtonsDrawer>(named("BanPluginSettingsProvider"))
         val adminsApi = koin.get<AdminsCacheAPI>()
 
         suspend fun sayUserHisWarnings(message: Message, userInReply: Either<User, ChannelChat>, settings: ChatSettings, warnings: Long) {
@@ -332,6 +163,14 @@ class BanPlugin : Plugin {
                 null
             } else {
                 chatSettings
+            }
+        }
+
+        onMessageDataCallbackQuery {
+            with(settingsProvider) {
+                if (performMessageDataCallbackQuery(it) != null) {
+                    answer(it)
+                }
             }
         }
 
@@ -772,14 +611,6 @@ class BanPlugin : Plugin {
                         }
                     }
                 }
-            }
-        }
-
-        onMessageDataCallbackQuery {
-            val chatId = updateSettings(adminsApi, chatsSettings, it) ?: return@onMessageDataCallbackQuery
-
-            with(settingsProvider) {
-                drawInlineButtons(chatId, it.user.id, it.message.messageId,)
             }
         }
     }

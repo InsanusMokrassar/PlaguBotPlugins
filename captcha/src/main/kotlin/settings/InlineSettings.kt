@@ -5,22 +5,19 @@ import dev.inmo.micro_utils.repos.exposed.keyvalue.ExposedKeyValueRepo
 import dev.inmo.micro_utils.repos.mappers.withMapper
 import dev.inmo.plagubot.plugins.captcha.db.CaptchaChatsSettingsRepo
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
+import dev.inmo.plagubot.plugins.inline.buttons.utils.*
+import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
-import dev.inmo.tgbotapi.extensions.utils.extensions.sameMessage
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.row
 import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
-import kotlinx.coroutines.flow.*
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.builtins.PairSerializer
 import kotlinx.serialization.builtins.serializer
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.update
-import org.koin.core.Koin
 
 class InlineSettings(
     private val backDrawer: InlineButtonsDrawer,
@@ -55,14 +52,14 @@ class InlineSettings(
         messageId: MessageId,
         key: String?
     ) {
-        var chatSettings = chatsSettingsRepo.getById(chatId) ?: ChatSettings(chatId)
-        val editedMessage = edit(
+        val chatSettings = chatsSettingsRepo.getById(chatId) ?: ChatSettings(chatId)
+        edit(
             userId,
             messageId,
             replyMarkup = inlineKeyboard {
                 if (chatSettings.enabled) {
                     row {
-                        dataButton("Enabled", disableData)
+                        dataButton("Enabled$successfulSymbol", disableData)
                     }
                     listOf(
                         CallbackDataInlineKeyboardButton(
@@ -90,22 +87,21 @@ class InlineSettings(
                             }
                         ),
                         CallbackDataInlineKeyboardButton(
-                            "CAS${if (chatSettings.kickOnUnsuccess) successfulSymbol else unsuccessfulSymbol}",
+                            "CAS${if (chatSettings.casEnabled) successfulSymbol else unsuccessfulSymbol}",
                             if (chatSettings.casEnabled) {
                                 disableCASData
                             } else {
                                 enableCASData
                             }
-                        ),
-                        CallbackDataInlineKeyboardButton(
-                            backDrawer.name,
-                            backDrawer.id
                         )
                     ).chunked(2).forEach(::add)
                 } else {
                     row {
-                        dataButton("Enabled", enableData)
+                        dataButton("Enabled$unsuccessfulSymbol", enableData)
                     }
+                }
+                row {
+                    drawerDataButton(backDrawer, chatId)
                 }
             }
         )
@@ -130,6 +126,9 @@ class InlineSettings(
                 } else {
                     chatsSettingsRepo.update(chatId, newChatSettings)
                 }
+
+                drawInlineButtons(chatId, it.message.chat.id, it.message.messageId, InlineButtonsKeys.Settings)
+                answer(it)
             }
         }
 
@@ -168,35 +167,34 @@ class InlineSettings(
             copy(casEnabled = false)
         }
 
-        onMessageDataCallbackQuery(initialFilter = { it.data == backDrawer.id }) {
-            val key = it.message.chat.id to it.message.messageId
-            val chatId = internalRepo.get(key) ?: return@onMessageDataCallbackQuery
-
-            internalRepo.unset(key)
-
-            with(backDrawer) {
-                drawInlineButtons(chatId, it.message.chat.id, it.message.messageId)
+        onMessageDataCallbackQuery {
+            val (_, data) = extractChatIdAndData(it.data) ?: return@onMessageDataCallbackQuery
+            if (data == backDrawer.id) {
+                internalRepo.unset(it.message.chat.id to it.message.messageId)
             }
+            answer(it)
         }
     }
 
     companion object {
         private const val captchaPrefix = "captcha_"
+        private const val captchaEnablePrefix = "${captchaPrefix}e"
+        private const val captchaDisablePrefix = "${captchaPrefix}d"
 
-        private const val enableData = "${captchaPrefix}_enable"
-        private const val disableData = "${captchaPrefix}_disable"
+        private const val enableData = captchaEnablePrefix
+        private const val disableData = captchaDisablePrefix
 
-        private const val enableAutoRemoveEventsData = "${captchaPrefix}_rm_e_e"
-        private const val disableAutoRemoveEventsData = "${captchaPrefix}_rm_e_d"
+        private const val enableAutoRemoveEventsData = "${captchaEnablePrefix}_rm_e"
+        private const val disableAutoRemoveEventsData = "${captchaDisablePrefix}_rm_e"
 
-        private const val enableAutoRemoveCommandsData = "${captchaPrefix}_rm_c_e"
-        private const val disableAutoRemoveCommandsData = "${captchaPrefix}_rm_c_d"
+        private const val enableAutoRemoveCommandsData = "${captchaEnablePrefix}_rm_c"
+        private const val disableAutoRemoveCommandsData = "${captchaDisablePrefix}_rm_c"
 
-        private const val enableKickOnUnsuccessData = "${captchaPrefix}_kick_e"
-        private const val disableKickOnUnsuccessData = "${captchaPrefix}_kick_d"
+        private const val enableKickOnUnsuccessData = "${captchaEnablePrefix}_kick"
+        private const val disableKickOnUnsuccessData = "${captchaDisablePrefix}_kick"
 
-        private const val enableCASData = "${captchaPrefix}_cas"
-        private const val disableCASData = "${captchaPrefix}_cas"
+        private const val enableCASData = "${captchaEnablePrefix}_cas"
+        private const val disableCASData = "${captchaDisablePrefix}_cas"
 
         private const val successfulSymbol = "✅"
         private const val unsuccessfulSymbol = "❌"

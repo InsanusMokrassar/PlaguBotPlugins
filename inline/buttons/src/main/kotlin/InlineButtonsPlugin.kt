@@ -25,44 +25,6 @@ import org.koin.core.module.Module
 import org.koin.core.scope.Scope
 import org.koin.dsl.binds
 
-/**
- * Buttons drawer with context info
- */
-interface InlineButtonsDrawer {
-    /**
-     * Title of drawer to show on buttons
-     */
-    val name: String
-
-    /**
-     * Identifier of drawer which will be used on button as data
-     */
-    val id: String
-
-    /**
-     * Supported keys of drawer. If null - this drawer will be used with all keys
-     *
-     * Default value is a list with single parameter [InlineButtonsKeys.Settings], which
-     * means that this drawer will be used only in settings request
-     */
-    val keys: Set<String?>?
-        get() = setOf(InlineButtonsKeys.Settings)
-
-    /**
-     * This method will be called when message editing will be called. It is assumed that the drawer will
-     * edit message by itself. In case you want to provide work with "Back" button, you should retrieve [InlineButtonsDrawer]
-     * from [Koin]
-     */
-    suspend fun BehaviourContext.drawInlineButtons(chatId: ChatId, userId: UserId, messageId: MessageId, key: String?)
-
-    suspend fun BehaviourContext.drawInlineButtons(
-        chatId: ChatId,
-        userId: UserId,
-        messageId: MessageId
-    ) = drawInlineButtons(chatId, userId, messageId, null)
-
-}
-
 @Serializable
 class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
     override val id: String = "inline_buttons"
@@ -70,12 +32,14 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
     private val providersMap = mutableMapOf<String, InlineButtonsDrawer>()
 
     fun register(provider: InlineButtonsDrawer){
-        providersMap[provider.id] = provider
+        if (provider != this) {
+            providersMap[provider.id] = provider
+        }
     }
 
-    private fun extractChatIdAndProviderId(data: String): Pair<ChatId, InlineButtonsDrawer?> {
-        val (chatId, providerId) = extractChatIdAndData(data)
-        val provider = providersMap[providerId]
+    private fun extractChatIdAndProviderId(data: String): Pair<ChatId, InlineButtonsDrawer?>? {
+        val (chatId, providerId) = extractChatIdAndData(data) ?: return null
+        val provider = providersMap[providerId] ?: takeIf { id == providerId }
         return chatId to provider
     }
     private fun createProvidersInlineKeyboard(chatId: ChatId, key: String?) = inlineKeyboard {
@@ -87,8 +51,8 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
             } ?: it
         }.chunked(4).forEach {
             row {
-                it.forEach { provider ->
-                    inlineDataButton(provider.name, chatId, provider.id)
+                it.forEach { drawer ->
+                    drawerDataButton(drawer, chatId)
                 }
             }
         }
@@ -101,7 +65,7 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
         key: String?
     ) {
         editMessageReplyMarkup(
-            chatId,
+            userId,
             messageId,
             replyMarkup = createProvidersInlineKeyboard(chatId, key)
         )
@@ -114,6 +78,9 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
     }
 
     override suspend fun BehaviourContext.setupBotPlugin(koin: Koin) {
+        koin.getAll<InlineButtonsDrawer>().distinct().forEach {
+            register(it)
+        }
         val adminsApi = koin.get<AdminsCacheAPI>()
         onCommand("settings") { commandMessage ->
             val verified = commandMessage.doAfterVerification(adminsApi) {
@@ -142,8 +109,8 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
             }
             reply(commandMessage, "Only admins may trigger settings")
         }
-        onMessageDataCallbackQuery{
-            val (chatId, provider) = extractChatIdAndProviderId(it.data)
+        onMessageDataCallbackQuery {
+            val (chatId, provider) = extractChatIdAndProviderId(it.data) ?: return@onMessageDataCallbackQuery
             if (provider == null) {
                 return@onMessageDataCallbackQuery
             }
