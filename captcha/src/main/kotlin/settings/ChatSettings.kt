@@ -12,6 +12,6 @@ data class ChatSettings(
     val autoRemoveCommands: Boolean = false,
     val autoRemoveEvents: Boolean = true,
     val kickOnUnsuccess: Boolean = true,
-    val enabled: Boolean = true,
+    val enabled: Boolean = false,
     val casEnabled: Boolean = false
 )

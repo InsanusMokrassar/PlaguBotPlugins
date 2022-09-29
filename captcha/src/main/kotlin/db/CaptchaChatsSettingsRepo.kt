@@ -34,6 +34,7 @@ class CaptchaChatsSettingsRepo(
     private val autoRemoveEventsColumn = bool("autoRemoveEvents").apply { default(true) }
     private val enabledColumn = bool("enabled").default(true)
     private val kickOnUnsuccessColumn = bool("kick").default(true)
+    private val casColumn = bool("cas").default(true)
 
     override val primaryKey = PrimaryKey(chatIdColumn)
 
@@ -48,6 +49,7 @@ class CaptchaChatsSettingsRepo(
         it[autoRemoveEventsColumn] = value.autoRemoveEvents
         it[enabledColumn] = value.enabled
         it[kickOnUnsuccessColumn] = value.kickOnUnsuccess
+        it[casColumn] = value.casEnabled
     }
 
     override fun update(id: ChatId, value: ChatSettings, it: UpdateStatement) {
@@ -57,6 +59,7 @@ class CaptchaChatsSettingsRepo(
             it[autoRemoveEventsColumn] = value.autoRemoveEvents
             it[enabledColumn] = value.enabled
             it[kickOnUnsuccessColumn] = value.kickOnUnsuccess
+            it[casColumn] = value.casEnabled
         }
     }
 
@@ -66,7 +69,8 @@ class CaptchaChatsSettingsRepo(
         autoRemoveCommands = get(autoRemoveCommandsColumn),
         autoRemoveEvents = get(autoRemoveEventsColumn),
         enabled = get(enabledColumn),
-        kickOnUnsuccess = get(kickOnUnsuccessColumn)
+        kickOnUnsuccess = get(kickOnUnsuccessColumn),
+        casEnabled = get(casColumn)
     )
 
     override val selectById: SqlExpressionBuilder.(ChatId) -> Op<Boolean> = { chatIdColumn.eq(it.chatId) }
@@ -77,7 +81,8 @@ class CaptchaChatsSettingsRepo(
             autoRemoveCommands = get(autoRemoveCommandsColumn),
             autoRemoveEvents = get(autoRemoveEventsColumn),
             enabled = get(enabledColumn),
-            kickOnUnsuccess = get(kickOnUnsuccessColumn)
+            kickOnUnsuccess = get(kickOnUnsuccessColumn),
+            casEnabled = get(casColumn)
         )
 
     init {
