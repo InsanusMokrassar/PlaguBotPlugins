@@ -5,6 +5,7 @@ import dev.inmo.kslog.common.e
 import dev.inmo.kslog.common.logger
 import dev.inmo.plagubot.Plugin
 import dev.inmo.plagubot.plugins.commands.full
+import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.delete
 import dev.inmo.tgbotapi.extensions.api.edit.edit
@@ -39,6 +40,7 @@ import org.jetbrains.exposed.sql.Database
 import org.koin.core.Koin
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
+import org.koin.dsl.binds
 
 /**
  * This is template of plugin with preset [log]ger, [Config] and template configurations of [setupDI] and [setupBotPlugin].
@@ -72,7 +74,9 @@ class WelcomePlugin : Plugin {
         single { get<Json>().decodeFromJsonElement(Config.serializer(), params[pluginConfigSectionName] ?: return@single Config()) }
         single { WelcomeTable(database) }
         single(named("welcome")) { BotCommand("welcome", "Use to setup welcome message").full(BotCommandScope.AllChatAdministrators) }
-        single(named("welcome")) { WelcomeInlineButtons(get(), get()) }
+        single(named("welcome")) { WelcomeInlineButtons(get(), get()) } binds arrayOf(
+            InlineButtonsDrawer::class
+        )
     }
 
     private suspend fun BehaviourContext.handleWelcomeCommand(

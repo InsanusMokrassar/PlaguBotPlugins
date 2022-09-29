@@ -161,11 +161,6 @@ class CaptchaBotPlugin : Plugin {
         val repo: CaptchaChatsSettingsRepo by koin.inject()
         val adminsAPI = koin.getOrNull<AdminsCacheAPI>()
         val casChecker = koin.get<CASChecker>()
-        val inlineSettings = koin.get<InlineSettings>()
-
-        with(inlineSettings) {
-            setupListeners()
-        }
 
         suspend fun Chat.settings() = repo.getById(id) ?: repo.create(ChatSettings(id)).first()
 

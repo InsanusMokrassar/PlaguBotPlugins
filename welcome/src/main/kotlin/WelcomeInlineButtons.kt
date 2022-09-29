@@ -109,6 +109,7 @@ internal class WelcomeInlineButtons(
                                 sentByUser.messageId
                             )
                         )
+                        drawInlineButtons(chatId, it.user.id, it.message.messageId, InlineButtonsKeys.Settings)
                         edit(sent) {
                             if (success) {
                                 +"Set request has been cancelled"
