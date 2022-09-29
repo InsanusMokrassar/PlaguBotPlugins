@@ -71,6 +71,18 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
         )
     }
 
+    override suspend fun BehaviourContext.setupReactions(koin: Koin) {
+        onMessageDataCallbackQuery {
+            val (chatId, provider) = extractChatIdAndProviderId(it.data) ?: return@onMessageDataCallbackQuery
+            if (provider == null) {
+                return@onMessageDataCallbackQuery
+            }
+            with (provider){
+                drawInlineButtons(chatId, it.user.id, it.message.messageId, InlineButtonsKeys.Settings)
+            }
+        }
+    }
+
     override fun Module.setupDI(database: Database, params: JsonObject) {
         single { this@InlineButtonsPlugin } binds arrayOf(
             InlineButtonsDrawer::class
@@ -109,15 +121,13 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
             }
             reply(commandMessage, "Only admins may trigger settings")
         }
-        onMessageDataCallbackQuery {
-            val (chatId, provider) = extractChatIdAndProviderId(it.data) ?: return@onMessageDataCallbackQuery
-            if (provider == null) {
-                return@onMessageDataCallbackQuery
-            }
-            with (provider){
-                drawInlineButtons(chatId, it.user.id, it.message.messageId, InlineButtonsKeys.Settings)
+
+        koin.getAll<InlineButtonsDrawer>().distinct().forEach {
+            with(it) {
+                setupReactions(koin)
             }
         }
+        setupReactions(koin)
     }
 }
 

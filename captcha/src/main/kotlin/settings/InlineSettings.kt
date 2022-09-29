@@ -28,6 +28,7 @@ import kotlinx.serialization.StringFormat
 import kotlinx.serialization.builtins.PairSerializer
 import kotlinx.serialization.builtins.serializer
 import org.jetbrains.exposed.sql.Database
+import org.koin.core.Koin
 import kotlin.math.min
 
 class InlineSettings(
@@ -158,7 +159,7 @@ class InlineSettings(
         }
     }
 
-    suspend fun BehaviourContext.setupListeners() {
+    override suspend fun BehaviourContext.setupReactions(koin: Koin) {
         suspend fun defaultListener(
             data: String,
             onComplete: suspend BehaviourContext.(ChatSettings, MessageDataCallbackQuery) -> Unit = { it, query ->
@@ -234,7 +235,7 @@ class InlineSettings(
                                 }
                             }
                         }
-                    )
+                        )
                 }.map { message ->
                     message.content.text.toIntOrNull()
                 }.first()

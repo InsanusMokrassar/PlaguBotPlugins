@@ -5,6 +5,7 @@ import dev.inmo.plagubot.plugins.inline.buttons.utils.inlineDataButton
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardRowBuilder
 import dev.inmo.tgbotapi.types.*
+import org.koin.core.Koin
 
 /**
  * Buttons drawer with context info
@@ -41,4 +42,6 @@ interface InlineButtonsDrawer {
         userId: UserId,
         messageId: MessageId
     ) = drawInlineButtons(chatId, userId, messageId, null)
+
+    suspend fun BehaviourContext.setupReactions(koin: Koin) {}
 }

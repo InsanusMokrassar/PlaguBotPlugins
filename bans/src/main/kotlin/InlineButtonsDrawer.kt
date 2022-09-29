@@ -14,6 +14,7 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.row
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
@@ -24,6 +25,7 @@ import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
 import dev.inmo.tgbotapi.utils.botCommand
 import dev.inmo.tgbotapi.utils.buildEntities
 import kotlinx.coroutines.flow.*
+import org.koin.core.Koin
 
 internal class BansInlineButtonsDrawer(
     private val backDrawer: InlineButtonsDrawer,
@@ -194,6 +196,14 @@ internal class BansInlineButtonsDrawer(
                     }
                 }
             )
+        }
+    }
+
+    override suspend fun BehaviourContext.setupReactions(koin: Koin) {
+        onMessageDataCallbackQuery {
+            if (performMessageDataCallbackQuery(it) != null) {
+                answer(it)
+            }
         }
     }
 }

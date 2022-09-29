@@ -72,6 +72,7 @@ class WelcomePlugin : Plugin {
         single { get<Json>().decodeFromJsonElement(Config.serializer(), params[pluginConfigSectionName] ?: return@single Config()) }
         single { WelcomeTable(database) }
         single(named("welcome")) { BotCommand("welcome", "Use to setup welcome message").full(BotCommandScope.AllChatAdministrators) }
+        single(named("welcome")) { WelcomeInlineButtons(get(), get()) }
     }
 
     private suspend fun BehaviourContext.handleWelcomeCommand(
