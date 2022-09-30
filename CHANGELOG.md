@@ -2,6 +2,10 @@
 
 ## 0.4.1
 
+* `Inline`
+  * `Buttons`:
+    * Plugin bot will include `start` link if it has not been started yet by user after `/start` call
+
 ## 0.4.0
 
 Project `PlaguBotPlugins` has been inited and filled with currently available plugins
