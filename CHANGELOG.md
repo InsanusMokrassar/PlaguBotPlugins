@@ -5,6 +5,8 @@
 * `Inline`
   * `Buttons`:
     * Plugin bot will include `start` link if it has not been started yet by user after `/start` call
+* `Welcome`:
+  * Bot will send previously used message to removing chat
 
 ## 0.4.0
 
