@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.1
+
 ## 0.4.0
 
 Project `PlaguBotPlugins` has been inited and filled with currently available plugins
