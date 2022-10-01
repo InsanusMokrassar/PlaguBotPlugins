@@ -109,7 +109,7 @@ class WelcomePlugin : Plugin {
                     }.first()
 
                     edit(sentMessage) {
-                        if (welcomeTable.unset(groupMessage.chat.id)) {
+                        if (welcomeTable.unset(groupMessage.chat.id) != null) {
                             regular("Welcome message has been removed for chat ")
                             underline(groupMessage.chat.title)
                         } else {

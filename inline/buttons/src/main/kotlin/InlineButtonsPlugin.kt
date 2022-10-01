@@ -2,11 +2,13 @@ package dev.inmo.plagubot.plugins.inline.buttons
 
 import dev.inmo.plagubot.*
 import dev.inmo.plagubot.plugins.inline.buttons.utils.*
+import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.utils.formatting.makeUsernameLink
 import dev.inmo.tgbotapi.extensions.utils.requireGroupChat
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.row
@@ -16,7 +18,9 @@ import dev.inmo.tgbotapi.libraries.cache.admins.doAfterVerification
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.UserId
+import dev.inmo.tgbotapi.types.chat.ExtendedBot
 import dev.inmo.tgbotapi.utils.code
+import dev.inmo.tgbotapi.utils.link
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import org.jetbrains.exposed.sql.Database
@@ -94,6 +98,7 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
             register(it)
         }
         val adminsApi = koin.get<AdminsCacheAPI>()
+        val me = koin.getOrNull<ExtendedBot>() ?: getMe()
         onCommand("settings") { commandMessage ->
             val verified = commandMessage.doAfterVerification(adminsApi) {
                 commandMessage.whenFromUser {
@@ -110,7 +115,9 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
                         reply(
                             commandMessage
                         ) {
-                            +"Looks like you didn't started the bot. Please start bot and try again"
+                            +"Looks like you didn't started the bot. Please "
+                            link("start", makeUsernameLink(me.username.usernameWithoutAt))
+                            +" bot and try again"
                         }
                     }
                 }

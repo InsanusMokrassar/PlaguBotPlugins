@@ -1,5 +1,6 @@
 package dev.inmo.plagubot.plugins.welcome
 
+import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
 import dev.inmo.plagubot.plugins.inline.buttons.utils.*
 import dev.inmo.plagubot.plugins.welcome.db.WelcomeTable
@@ -119,10 +120,10 @@ internal class WelcomeInlineButtons(
                         }
                     }
                     unsetMessageData -> {
-                        val success = welcomeTable.unset(chatId)
+                        val deletedSettings = welcomeTable.unset(chatId)
 
                         reply(it.message) {
-                            if (success) {
+                            if (deletedSettings != null) {
                                 +"Set request has been cancelled"
                             } else {
                                 +"For some reason I am unable to "
@@ -130,6 +131,16 @@ internal class WelcomeInlineButtons(
                         }
 
                         drawInlineButtons(chatId, it.user.id, it.message.messageId, InlineButtonsKeys.Settings)
+
+                        deletedSettings ?.let {
+                            runCatchingSafely {
+                                copyMessage(
+                                    it.targetChatId,
+                                    it.sourceChatId,
+                                    it.sourceMessageId
+                                )
+                            }
+                        }
 
                         answer(it)
                     }

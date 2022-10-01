@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.1
+
+* `Versions`:
+  * `plagubot`: `2.3.4`
+  * `microutils`: `0.12.17`
+  * `tgbotapi libraries`: `0.5.5`
+* `Inline`
+  * `Buttons`:
+    * Plugin bot will include `start` link if it has not been started yet by user after `/start` call
+* `Welcome`:
+  * Bot will send previously used message to removing chat
+
 ## 0.4.0
 
 Project `PlaguBotPlugins` has been inited and filled with currently available plugins

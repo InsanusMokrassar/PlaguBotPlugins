@@ -19,14 +19,16 @@ internal class WelcomeTable(
         initTable()
     }
 
+    private fun getInTransaction(chatId: ChatId) = select { targetChatIdColumn.eq(chatId.chatId) }.limit(1).firstOrNull() ?.let {
+        ChatSettings(
+            ChatId(it[targetChatIdColumn]),
+            ChatId(it[sourceChatIdColumn]),
+            it[sourceMessageIdColumn]
+        )
+    }
+
     fun get(chatId: ChatId): ChatSettings? = transaction(database) {
-        select { targetChatIdColumn.eq(chatId.chatId) }.limit(1).firstOrNull() ?.let {
-            ChatSettings(
-                ChatId(it[targetChatIdColumn]),
-                ChatId(it[sourceChatIdColumn]),
-                it[sourceMessageIdColumn]
-            )
-        }
+        getInTransaction(chatId)
     }
 
     fun set(chatSettings: ChatSettings): Boolean = transaction(database) {
@@ -38,7 +40,9 @@ internal class WelcomeTable(
         }.insertedCount > 0
     }
 
-    fun unset(chatId: ChatId): Boolean = transaction(database) {
-        deleteWhere { targetChatIdColumn.eq(chatId.chatId) } > 0
+    fun unset(chatId: ChatId): ChatSettings? = transaction(database) {
+        getInTransaction(chatId) ?.also {
+            deleteWhere { targetChatIdColumn.eq(chatId.chatId) }
+        }
     }
 }
