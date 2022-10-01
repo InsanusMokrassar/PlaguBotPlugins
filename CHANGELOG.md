@@ -2,6 +2,9 @@
 
 ## 0.4.1
 
+* `Versions`:
+  * `plagubot`: `2.3.4`
+  * `microutils`: `0.12.17`
 * `Inline`
   * `Buttons`:
     * Plugin bot will include `start` link if it has not been started yet by user after `/start` call
