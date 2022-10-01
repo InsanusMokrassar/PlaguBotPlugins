@@ -7,7 +7,7 @@ plagubot = "2.3.4"
 kslog = "0.5.2"
 microutils = "0.12.17"
 
-tgbotapi-libraries = "0.5.4"
+tgbotapi-libraries = "0.5.5"
 
 gh-release = "2.4.1"
 
