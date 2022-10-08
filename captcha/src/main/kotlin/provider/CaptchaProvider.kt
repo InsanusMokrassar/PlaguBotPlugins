@@ -115,7 +115,7 @@ sealed class CaptchaProvider {
                         }
                         else -> {
                             send(chat, " ") {
-                                +"User" + mention(user) + underline("didn't passed") + "captcha"
+                                +"User" + mention(user) + underline("didn't pass") + "captcha"
                             }
                             if (kickOnUnsuccess) {
                                 banUser(chat, user, leftRestrictionsPermissions)
