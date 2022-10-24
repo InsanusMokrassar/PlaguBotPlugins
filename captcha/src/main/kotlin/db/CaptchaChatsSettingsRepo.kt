@@ -11,8 +11,7 @@ import dev.inmo.tgbotapi.types.toChatId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.InsertStatement
-import org.jetbrains.exposed.sql.statements.UpdateStatement
+import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 private val captchaProviderSerialFormat = Json {
@@ -42,25 +41,18 @@ class CaptchaChatsSettingsRepo(
         chatIdColumn.inList(it.map { it.chatId })
     }
 
-    override fun insert(value: ChatSettings, it: InsertStatement<Number>) {
+    override fun createAndInsertId(value: ChatSettings, it: InsertStatement<Number>): ChatId? {
         it[chatIdColumn] = value.chatId.chatId
+        return value.chatId
+    }
+
+    override fun update(id: ChatId?, value: ChatSettings, it: UpdateBuilder<Int>) {
         it[captchaProviderColumn] = captchaProviderSerialFormat.encodeToString(CaptchaProvider.serializer(), value.captchaProvider)
         it[autoRemoveCommandsColumn] = value.autoRemoveCommands
         it[autoRemoveEventsColumn] = value.autoRemoveEvents
         it[enabledColumn] = value.enabled
         it[kickOnUnsuccessColumn] = value.kickOnUnsuccess
         it[casColumn] = value.casEnabled
-    }
-
-    override fun update(id: ChatId, value: ChatSettings, it: UpdateStatement) {
-        if (id.chatId == value.chatId.chatId) {
-            it[captchaProviderColumn] = captchaProviderSerialFormat.encodeToString(CaptchaProvider.serializer(), value.captchaProvider)
-            it[autoRemoveCommandsColumn] = value.autoRemoveCommands
-            it[autoRemoveEventsColumn] = value.autoRemoveEvents
-            it[enabledColumn] = value.enabled
-            it[kickOnUnsuccessColumn] = value.kickOnUnsuccess
-            it[casColumn] = value.casEnabled
-        }
     }
 
     override fun InsertStatement<Number>.asObject(value: ChatSettings): ChatSettings = ChatSettings(
