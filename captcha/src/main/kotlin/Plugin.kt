@@ -354,7 +354,7 @@ class CaptchaBotPlugin : Plugin {
                         settings.copy(kickOnUnsuccess = true)
                     )
 
-                    reply(message, "Ok, new users didn't passed captcha will be kicked").apply {
+                    reply(message, "Ok, new users didn't pass captcha will be kicked").apply {
                         launchSafelyWithoutExceptions {
                             delay(5000L)
                             delete(this@apply)
