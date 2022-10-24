@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0
+
+* `Versions`:
+  * `kotlin`: `1.7.20`
+  * `serialization`: `1.4.1`
+  * `plagubot`: `2.4.0`
+  * `microutils`: `0.13.1`
+  * `tgbotapi libraries`: `0.5.6`
+
 ## 0.4.1
 
 * `Versions`:
