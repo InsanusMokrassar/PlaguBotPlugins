@@ -1,13 +1,13 @@
 [versions]
 
-kotlin = "1.7.10"
-kotlin-serialization = "1.4.0"
+kotlin = "1.7.20"
+kotlin-serialization = "1.4.1"
 
-plagubot = "2.3.4"
+plagubot = "2.4.0"
 kslog = "0.5.2"
-microutils = "0.12.17"
+microutils = "0.13.1"
 
-tgbotapi-libraries = "0.5.5"
+tgbotapi-libraries = "0.5.6"
 
 gh-release = "2.4.1"
 
