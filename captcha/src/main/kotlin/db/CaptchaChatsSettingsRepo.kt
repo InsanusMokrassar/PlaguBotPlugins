@@ -37,7 +37,7 @@ class CaptchaChatsSettingsRepo(
 
     override val primaryKey = PrimaryKey(chatIdColumn)
 
-    override val selectByIds: SqlExpressionBuilder.(List<ChatId>) -> Op<Boolean> = {
+    override val selectByIds: ISqlExpressionBuilder.(List<ChatId>) -> Op<Boolean> = {
         chatIdColumn.inList(it.map { it.chatId })
     }
 
@@ -65,7 +65,7 @@ class CaptchaChatsSettingsRepo(
         casEnabled = get(casColumn)
     )
 
-    override val selectById: SqlExpressionBuilder.(ChatId) -> Op<Boolean> = { chatIdColumn.eq(it.chatId) }
+    override val selectById: ISqlExpressionBuilder.(ChatId) -> Op<Boolean> = { chatIdColumn.eq(it.chatId) }
     override val ResultRow.asObject: ChatSettings
         get() = ChatSettings(
             chatId = get(chatIdColumn).toChatId(),

@@ -5,6 +5,7 @@ import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
 internal class WelcomeTable(
