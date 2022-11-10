@@ -10,6 +10,7 @@ microutils = "0.14.1"
 tgbotapi-libraries = "0.6.1"
 
 gh-release = "2.4.1"
+dokka = "1.7.20"
 
 [libraries]
 
@@ -29,5 +30,5 @@ tgbotapi-libraries-admins-plagubot = { module = "dev.inmo:tgbotapi.libraries.cac
 
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-serialization-plugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
-kotlin-dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "kotlin" }
+kotlin-dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 gh-release-plugin = { module = "com.github.breadmoirai:github-release", version.ref = "gh-release" }
