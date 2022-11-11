@@ -1,9 +1,7 @@
 package dev.inmo.plagubot.plugins.inline.buttons
 
 import dev.inmo.plagubot.plugins.inline.buttons.utils.InlineButtonsKeys
-import dev.inmo.plagubot.plugins.inline.buttons.utils.inlineDataButton
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardRowBuilder
 import dev.inmo.tgbotapi.types.*
 import org.koin.core.Koin
 
@@ -35,7 +33,7 @@ interface InlineButtonsDrawer {
      * edit message by itself. In case you want to provide work with "Back" button, you should retrieve [InlineButtonsDrawer]
      * from [Koin]
      */
-    suspend fun BehaviourContext.drawInlineButtons(chatId: ChatId, userId: UserId, messageId: MessageId, key: String?)
+    suspend fun BehaviourContext.drawInlineButtons(chatId: IdChatIdentifier, userId: UserId, messageId: MessageId, key: String?)
 
     suspend fun BehaviourContext.drawInlineButtons(
         chatId: ChatId,

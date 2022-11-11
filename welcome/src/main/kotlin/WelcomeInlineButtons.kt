@@ -17,7 +17,10 @@ import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.libraries.cache.admins.doIfAdmin
 import dev.inmo.tgbotapi.types.*
+import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.utils.RowBuilder
+import dev.inmo.tgbotapi.utils.row
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import org.koin.core.Koin
@@ -32,7 +35,7 @@ internal class WelcomeInlineButtons(
         get() = "welcome"
 
     override suspend fun BehaviourContext.drawInlineButtons(
-        chatId: ChatId,
+        chatId: IdChatIdentifier,
         userId: UserId,
         messageId: MessageId,
         key: String?
@@ -42,18 +45,18 @@ internal class WelcomeInlineButtons(
             messageId,
             replyMarkup = inlineKeyboard {
                 val currentMessageInfo = welcomeTable.get(chatId)
-                row {
+                row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                     inlineDataButton("Set new", chatId, setMessageData)
                     inlineDataButton("Unset", chatId, unsetMessageData)
-                }
+                })
                 if (currentMessageInfo != null) {
-                    row {
+                    row<InlineKeyboardButton>(fun RowBuilder<InlineKeyboardButton>.() {
                         inlineDataButton("Get message", chatId, getMessageData)
-                    }
+                    })
                 }
-                row {
+                row<InlineKeyboardButton>(fun RowBuilder<InlineKeyboardButton>.() {
                     inlineDataButton("Back", chatId, backDrawer.id)
-                }
+                })
             }
         )
     }

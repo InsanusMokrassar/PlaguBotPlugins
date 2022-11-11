@@ -21,6 +21,7 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
+import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.chat.ChatPermissions
 import dev.inmo.tgbotapi.types.chat.*
 import dev.inmo.tgbotapi.types.chat.User
@@ -294,13 +295,13 @@ data class SimpleCaptchaProvider(
             val sentMessage = send(
                 chat,
                 replyMarkup = inlineKeyboard {
-                    row {
+                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                         dataButton(buttonText, callbackData)
-                    }
+                    })
                     if (adminsApi != null) {
-                        row {
+                        row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                             dataButton("Cancel (Admins only)", cancelData)
-                        }
+                        })
                     }
                 }
             ) {
@@ -438,9 +439,9 @@ data class ExpressionCaptchaProvider(
                         CallbackDataInlineKeyboardButton(it.toString(), it.toString())
                     }.chunked(3).forEach(::add)
                     if (adminsApi != null) {
-                        row {
+                        row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                             dataButton("Cancel (Admins only)", cancelData)
-                        }
+                        })
                     }
                 }
             ) {

@@ -7,6 +7,7 @@ import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
+import dev.inmo.tgbotapi.utils.row
 
 infix fun String.startingOf(target: String) = target.startsWith(this)
 
@@ -22,9 +23,9 @@ fun slotMachineReplyMarkup(
     return inlineKeyboard {
         buttonsPreset.forEach(::add)
         if (adminCancelButton) {
-            row {
+            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                 dataButton("Cancel (Admins only)", cancelData)
-            }
+            })
         }
     }
 }

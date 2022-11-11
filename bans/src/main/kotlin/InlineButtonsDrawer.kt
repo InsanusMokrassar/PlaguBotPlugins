@@ -15,15 +15,18 @@ import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardRowBuilder
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.row
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.requests.send.SendTextMessage
 import dev.inmo.tgbotapi.types.*
+import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
 import dev.inmo.tgbotapi.utils.botCommand
 import dev.inmo.tgbotapi.utils.buildEntities
+import dev.inmo.tgbotapi.utils.row
 import kotlinx.coroutines.flow.*
 import org.koin.core.Koin
 
@@ -144,7 +147,7 @@ internal class BansInlineButtonsDrawer(
     }
 
     override suspend fun BehaviourContext.drawInlineButtons(
-        chatId: ChatId,
+        chatId: IdChatIdentifier,
         userId: UserId,
         messageId: MessageIdentifier,
         key: String?
@@ -161,7 +164,7 @@ internal class BansInlineButtonsDrawer(
                 userId,
                 messageId,
                 replyMarkup = inlineKeyboard {
-                    row {
+                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                         val forUsersEnabled = settings.workMode is WorkMode.EnabledForUsers
                         val usersEnabledSymbol = forUsersEnabled.enabledSymbol
                         inlineDataButton(
@@ -176,24 +179,24 @@ internal class BansInlineButtonsDrawer(
                             chatId,
                             toggleForAdminData
                         )
-                    }
-                    row {
+                    })
+                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                         inlineDataButton(
                             "${settings.allowWarnAdmins.enabledSymbol} Warn admins",
                             chatId,
                             allowWarnAdminsData
                         )
-                    }
-                    row {
+                    })
+                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                         inlineDataButton(
                             "Warns count: ${settings.warningsUntilBan}",
                             chatId,
                             warnsCountData
                         )
-                    }
-                    row {
+                    })
+                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                         drawerDataButton(backDrawer, chatId)
-                    }
+                    })
                 }
             )
         }

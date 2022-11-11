@@ -2,8 +2,10 @@ package dev.inmo.plagubot.plugins.welcome.db
 
 import dev.inmo.micro_utils.repos.exposed.ExposedRepo
 import dev.inmo.micro_utils.repos.exposed.initTable
+import dev.inmo.plagubot.plugins.common.IdChatIdentifier
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
+import dev.inmo.tgbotapi.types.IdChatIdentifier
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -12,7 +14,9 @@ internal class WelcomeTable(
     override val database: Database
 ) : Table("welcome"), ExposedRepo {
     val targetChatIdColumn = long("targetChatId").uniqueIndex()
+    val targetThreadIdColumn = long("targetThreadId").nullable().default(null)
     val sourceChatIdColumn = long("sourceChatId")
+    val sourceThreadIdColumn = long("sourceThreadId").nullable().default(null)
     val sourceMessageIdColumn = long("sourceMessageId")
     override val primaryKey: PrimaryKey = PrimaryKey(targetChatIdColumn)
 
@@ -20,15 +24,25 @@ internal class WelcomeTable(
         initTable()
     }
 
-    private fun getInTransaction(chatId: ChatId) = select { targetChatIdColumn.eq(chatId.chatId) }.limit(1).firstOrNull() ?.let {
+    private fun getInTransaction(chatId: IdChatIdentifier) = select {
+        targetChatIdColumn.eq(chatId.chatId).and(
+            targetThreadIdColumn.eq(chatId.threadId)
+        )
+    }.limit(1).firstOrNull() ?.let {
         ChatSettings(
-            ChatId(it[targetChatIdColumn]),
-            ChatId(it[sourceChatIdColumn]),
+            IdChatIdentifier(
+                it[targetChatIdColumn],
+                it[targetThreadIdColumn]
+            ),
+            IdChatIdentifier(
+                it[sourceChatIdColumn],
+                it[sourceThreadIdColumn]
+            ),
             it[sourceMessageIdColumn]
         )
     }
 
-    fun get(chatId: ChatId): ChatSettings? = transaction(database) {
+    fun get(chatId: IdChatIdentifier): ChatSettings? = transaction(database) {
         getInTransaction(chatId)
     }
 
@@ -36,14 +50,16 @@ internal class WelcomeTable(
         deleteWhere { targetChatIdColumn.eq(chatSettings.targetChatId.chatId) }
         insert {
             it[targetChatIdColumn] = chatSettings.targetChatId.chatId
+            it[targetThreadIdColumn] = chatSettings.targetChatId.threadId
             it[sourceChatIdColumn] = chatSettings.sourceChatId.chatId
+            it[sourceThreadIdColumn] = chatSettings.sourceChatId.threadId
             it[sourceMessageIdColumn] = chatSettings.sourceMessageId
         }.insertedCount > 0
     }
 
-    fun unset(chatId: ChatId): ChatSettings? = transaction(database) {
+    fun unset(chatId: IdChatIdentifier): ChatSettings? = transaction(database) {
         getInTransaction(chatId) ?.also {
-            deleteWhere { targetChatIdColumn.eq(chatId.chatId) }
+            deleteWhere { targetChatIdColumn.eq(chatId.chatId).and(targetThreadIdColumn.eq(chatId.threadId)) }
         }
     }
 }

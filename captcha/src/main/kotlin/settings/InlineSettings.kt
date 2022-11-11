@@ -1,11 +1,13 @@
 package dev.inmo.plagubot.plugins.captcha.settings
 
-import com.soywiz.klock.seconds
 import dev.inmo.micro_utils.repos.*
+import dev.inmo.micro_utils.repos.exposed.keyvalue.AbstractExposedKeyValueRepo
 import dev.inmo.micro_utils.repos.exposed.keyvalue.ExposedKeyValueRepo
+import dev.inmo.micro_utils.repos.exposed.onetomany.AbstractExposedKeyValuesRepo
 import dev.inmo.micro_utils.repos.mappers.withMapper
 import dev.inmo.plagubot.plugins.captcha.db.CaptchaChatsSettingsRepo
 import dev.inmo.plagubot.plugins.captcha.provider.*
+import dev.inmo.plagubot.plugins.common.IdChatIdentifier
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
 import dev.inmo.plagubot.plugins.inline.buttons.utils.*
 import dev.inmo.tgbotapi.extensions.api.answers.answer
@@ -13,7 +15,6 @@ import dev.inmo.tgbotapi.extensions.api.delete
 import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitText
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitTextMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
@@ -21,15 +22,23 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.row
 import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
+import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
+import dev.inmo.tgbotapi.utils.row
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.builtins.PairSerializer
 import kotlinx.serialization.builtins.serializer
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.ISqlExpressionBuilder
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.koin.core.Koin
-import kotlin.math.min
 
 class InlineSettings(
     private val backDrawer: InlineButtonsDrawer,
@@ -42,24 +51,51 @@ class InlineSettings(
     override val id: String
         get() = "captcha"
 
-    private val internalRepo = ExposedKeyValueRepo(
+    private class InternalRepo(
+        database: Database,
+        private val stringFormat: StringFormat
+    ) : AbstractExposedKeyValueRepo<Pair<UserId, MessageId>, IdChatIdentifier>(
         database,
-        { text("messageInfo") },
-        { long("chatId") },
         "captcha_inline_settings_associations"
-    ).let {
+    ) {
         val pairSerializer = PairSerializer(UserId.serializer(), MessageId.serializer())
 
-        it.withMapper<Pair<UserId, MessageId>, ChatId, String, Long>(
-            { stringFormat.encodeToString(pairSerializer, this) },
-            { chatId },
-            { stringFormat.decodeFromString(pairSerializer, this) },
-            { ChatId(this) },
-        )
+        override val keyColumn = text("messageInfo")
+        private val chatIdColumn = long("chatId")
+        private val threadIdColumn = long("threadId").nullable().default(null)
+        override val selectById: ISqlExpressionBuilder.(Pair<UserId, MessageId>) -> Op<Boolean> = {
+            keyColumn.eq(stringFormat.encodeToString(pairSerializer, it))
+        }
+        override val selectByValue: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = {
+            chatIdColumn.eq(it.chatId).and(threadIdColumn.eq(it.threadId))
+        }
+        override val ResultRow.asKey: Pair<UserId, MessageId>
+            get() = stringFormat.decodeFromString(pairSerializer, get(keyColumn))
+        override val ResultRow.asObject: IdChatIdentifier
+            get() = IdChatIdentifier(
+                get(chatIdColumn),
+                get(threadIdColumn)
+            )
+
+        override fun update(
+            k: Pair<UserId, MessageId>,
+            v: IdChatIdentifier,
+            it: UpdateBuilder<Int>
+        ) {
+            it[chatIdColumn] = v.chatId
+            it[threadIdColumn] = v.threadId
+        }
+
+        override fun insertKey(k: Pair<UserId, MessageId>, v: IdChatIdentifier, it: InsertStatement<Number>) {
+            it[keyColumn] = stringFormat.encodeToString(pairSerializer, k)
+        }
+
     }
 
+    private val internalRepo = InternalRepo(database, stringFormat)
+
     override suspend fun BehaviourContext.drawInlineButtons(
-        chatId: ChatId,
+        chatId: IdChatIdentifier,
         userId: UserId,
         messageId: MessageId,
         key: String?
@@ -70,9 +106,9 @@ class InlineSettings(
             messageId,
             replyMarkup = inlineKeyboard {
                 if (chatSettings.enabled) {
-                    row {
+                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                         dataButton("Enabled$successfulSymbol", disableData)
-                    }
+                    })
                     listOf(
                         CallbackDataInlineKeyboardButton(
                             "Remove events${if (chatSettings.autoRemoveEvents) successfulSymbol else unsuccessfulSymbol}",
@@ -112,9 +148,9 @@ class InlineSettings(
                         )
                     ).chunked(2).forEach(::add)
                 } else {
-                    row {
+                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                         dataButton("Enabled$unsuccessfulSymbol", enableData)
-                    }
+                    })
                 }
                 drawerDataButtonRow(backDrawer, chatId)
             }
@@ -127,35 +163,39 @@ class InlineSettings(
         it: ChatSettings
     ): InlineKeyboardMarkup {
         return inlineKeyboard {
-            row {
-                dataButton("Use expressions${successfulSymbol.takeIf { _ -> it.captchaProvider is ExpressionCaptchaProvider } ?: ""}", useExpressionData)
-            }
-            row {
-                dataButton("Use slots${successfulSymbol.takeIf { _ -> it.captchaProvider is SlotMachineCaptchaProvider } ?: ""}", useSlotsData)
-            }
-            row {
-                dataButton("Use simple button${successfulSymbol.takeIf { _ -> it.captchaProvider is SimpleCaptchaProvider } ?: ""}", useSimpleData)
-            }
-            row {
+            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                dataButton("Use expressions${successfulSymbol.takeIf { _ -> it.captchaProvider is ExpressionCaptchaProvider } ?: ""}",
+                    useExpressionData)
+            })
+            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                dataButton("Use slots${successfulSymbol.takeIf { _ -> it.captchaProvider is SlotMachineCaptchaProvider } ?: ""}",
+                    useSlotsData)
+            })
+            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                dataButton("Use simple button${successfulSymbol.takeIf { _ -> it.captchaProvider is SimpleCaptchaProvider } ?: ""}",
+                    useSimpleData)
+            })
+            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                 dataButton("Captcha time: ${it.captchaProvider.checkTimeSpan.seconds} seconds", providerCaptchaTimeData)
-            }
+            })
             when (val provider = it.captchaProvider) {
                 is ExpressionCaptchaProvider -> {
-                    row {
+                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                         dataButton("Operand max: ${provider.maxPerNumber}", expressionOperandMaxData)
                         dataButton("Operations: ${provider.operations}", expressionOperationsData)
-                    }
-                    row {
+                    })
+                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                         dataButton("Answers: ${provider.answers}", expressionAnswersData)
                         dataButton("Attempts: ${provider.attempts}", expressionAttemptsData)
-                    }
+                    })
                 }
+
                 is SimpleCaptchaProvider -> {}
                 is SlotMachineCaptchaProvider -> {}
             }
-            row {
+            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
                 inlineDataButton("Back", it.chatId, id)
-            }
+            })
         }
     }
 
