@@ -4,7 +4,9 @@ import dev.inmo.micro_utils.repos.KeyValuesRepo
 import dev.inmo.micro_utils.repos.exposed.onetomany.ExposedKeyValuesRepo
 import dev.inmo.micro_utils.repos.mappers.withMapper
 import dev.inmo.plagubot.plugins.bans.utils.banPluginSerialFormat
+import dev.inmo.plagubot.plugins.common.FullChatIdentifierSerializer
 import dev.inmo.tgbotapi.types.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import org.jetbrains.exposed.sql.Database
@@ -15,10 +17,10 @@ internal val Database.warningsTable: WarningsTable
         { text("chatToUser") },
         { long("messageId") },
         "BanPluginWarningsTable"
-    ).withMapper<Pair<ChatId, UserId>, MessageIdentifier, String, Long>(
+    ).withMapper<Pair<IdChatIdentifier, UserId>, MessageIdentifier, String, Long>(
         keyToToFrom = { banPluginSerialFormat.decodeFromString(this) },
         keyFromToTo = { banPluginSerialFormat.encodeToString(this) },
         valueToToFrom = { this },
         valueFromToTo = { this }
     )
-internal typealias WarningsTable = KeyValuesRepo<Pair<ChatId, UserId>, MessageIdentifier>
+internal typealias WarningsTable = KeyValuesRepo<Pair<@Serializable(FullChatIdentifierSerializer::class) IdChatIdentifier, UserId>, MessageIdentifier>
