@@ -12,7 +12,6 @@ import dev.inmo.tgbotapi.extensions.utils.formatting.makeUsernameLink
 import dev.inmo.tgbotapi.extensions.utils.requireGroupChat
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardRowBuilder
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.row
 import dev.inmo.tgbotapi.extensions.utils.whenFromUser
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.libraries.cache.admins.doAfterVerification
@@ -57,11 +56,11 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
                 }
             } ?: it
         }.chunked(4).forEach {
-            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+            row {
                 it.forEach { drawer ->
                     drawerDataButton(drawer, chatId)
                 }
-            })
+            }
         }
     }
 

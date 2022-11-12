@@ -45,18 +45,18 @@ internal class WelcomeInlineButtons(
             messageId,
             replyMarkup = inlineKeyboard {
                 val currentMessageInfo = welcomeTable.get(chatId)
-                row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                row {
                     inlineDataButton("Set new", chatId, setMessageData)
                     inlineDataButton("Unset", chatId, unsetMessageData)
-                })
-                if (currentMessageInfo != null) {
-                    row<InlineKeyboardButton>(fun RowBuilder<InlineKeyboardButton>.() {
-                        inlineDataButton("Get message", chatId, getMessageData)
-                    })
                 }
-                row<InlineKeyboardButton>(fun RowBuilder<InlineKeyboardButton>.() {
+                if (currentMessageInfo != null) {
+                    row {
+                        inlineDataButton("Get message", chatId, getMessageData)
+                    }
+                }
+                row {
                     inlineDataButton("Back", chatId, backDrawer.id)
-                })
+                }
             }
         )
     }

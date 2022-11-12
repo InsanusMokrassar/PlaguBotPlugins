@@ -40,7 +40,6 @@ fun InlineKeyboardRowBuilder.drawerDataButton(drawer: InlineButtonsDrawer, chatI
     createChatIdAndDataInlineButtonData(chatId, drawer.id)
 )
 
-fun InlineKeyboardBuilder.drawerDataButtonRow(drawer: InlineButtonsDrawer, chatId: IdChatIdentifier) = row<InlineKeyboardButton>(
-    fun InlineKeyboardRowBuilder.() {
+fun InlineKeyboardBuilder.drawerDataButtonRow(drawer: InlineButtonsDrawer, chatId: IdChatIdentifier) = row {
  drawerDataButton(drawer, chatId)
-})
+}

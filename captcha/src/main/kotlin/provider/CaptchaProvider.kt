@@ -295,11 +295,11 @@ data class SimpleCaptchaProvider(
             val sentMessage = send(
                 chat,
                 replyMarkup = inlineKeyboard {
-                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                    row {
                         dataButton(buttonText, callbackData)
-                    })
+                    }
                     if (adminsApi != null) {
-                        row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                        row {
                             dataButton("Cancel (Admins only)", cancelData)
                         })
                     }
@@ -439,7 +439,7 @@ data class ExpressionCaptchaProvider(
                         CallbackDataInlineKeyboardButton(it.toString(), it.toString())
                     }.chunked(3).forEach(::add)
                     if (adminsApi != null) {
-                        row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                        row {
                             dataButton("Cancel (Admins only)", cancelData)
                         })
                     }

@@ -19,7 +19,6 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitTextMessa
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.row
 import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
@@ -106,9 +105,9 @@ class InlineSettings(
             messageId,
             replyMarkup = inlineKeyboard {
                 if (chatSettings.enabled) {
-                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                    row {
                         dataButton("Enabled$successfulSymbol", disableData)
-                    })
+                    }
                     listOf(
                         CallbackDataInlineKeyboardButton(
                             "Remove events${if (chatSettings.autoRemoveEvents) successfulSymbol else unsuccessfulSymbol}",
@@ -148,9 +147,9 @@ class InlineSettings(
                         )
                     ).chunked(2).forEach(::add)
                 } else {
-                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                    row {
                         dataButton("Enabled$unsuccessfulSymbol", enableData)
-                    })
+                    }
                 }
                 drawerDataButtonRow(backDrawer, chatId)
             }
@@ -163,39 +162,39 @@ class InlineSettings(
         it: ChatSettings
     ): InlineKeyboardMarkup {
         return inlineKeyboard {
-            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+            row {
                 dataButton("Use expressions${successfulSymbol.takeIf { _ -> it.captchaProvider is ExpressionCaptchaProvider } ?: ""}",
                     useExpressionData)
-            })
-            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+            }
+            row {
                 dataButton("Use slots${successfulSymbol.takeIf { _ -> it.captchaProvider is SlotMachineCaptchaProvider } ?: ""}",
                     useSlotsData)
-            })
-            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+            }
+            row {
                 dataButton("Use simple button${successfulSymbol.takeIf { _ -> it.captchaProvider is SimpleCaptchaProvider } ?: ""}",
                     useSimpleData)
-            })
-            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+            }
+            row {
                 dataButton("Captcha time: ${it.captchaProvider.checkTimeSpan.seconds} seconds", providerCaptchaTimeData)
-            })
+            }
             when (val provider = it.captchaProvider) {
                 is ExpressionCaptchaProvider -> {
-                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                    row {
                         dataButton("Operand max: ${provider.maxPerNumber}", expressionOperandMaxData)
                         dataButton("Operations: ${provider.operations}", expressionOperationsData)
-                    })
-                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                    }
+                    row {
                         dataButton("Answers: ${provider.answers}", expressionAnswersData)
                         dataButton("Attempts: ${provider.attempts}", expressionAttemptsData)
-                    })
+                    }
                 }
 
                 is SimpleCaptchaProvider -> {}
                 is SlotMachineCaptchaProvider -> {}
             }
-            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+            row {
                 inlineDataButton("Back", it.chatId, id)
-            })
+            }
         }
     }
 

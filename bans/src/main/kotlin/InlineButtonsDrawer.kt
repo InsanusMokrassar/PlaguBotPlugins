@@ -15,9 +15,7 @@ import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardRowBuilder
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.row
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.requests.send.SendTextMessage
 import dev.inmo.tgbotapi.types.*
@@ -164,7 +162,7 @@ internal class BansInlineButtonsDrawer(
                 userId,
                 messageId,
                 replyMarkup = inlineKeyboard {
-                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                    row {
                         val forUsersEnabled = settings.workMode is WorkMode.EnabledForUsers
                         val usersEnabledSymbol = forUsersEnabled.enabledSymbol
                         inlineDataButton(
@@ -179,24 +177,24 @@ internal class BansInlineButtonsDrawer(
                             chatId,
                             toggleForAdminData
                         )
-                    })
-                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                    }
+                    row {
                         inlineDataButton(
                             "${settings.allowWarnAdmins.enabledSymbol} Warn admins",
                             chatId,
                             allowWarnAdminsData
                         )
-                    })
-                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                    }
+                    row {
                         inlineDataButton(
                             "Warns count: ${settings.warningsUntilBan}",
                             chatId,
                             warnsCountData
                         )
-                    })
-                    row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+                    }
+                    row {
                         drawerDataButton(backDrawer, chatId)
-                    })
+                    }
                 }
             )
         }

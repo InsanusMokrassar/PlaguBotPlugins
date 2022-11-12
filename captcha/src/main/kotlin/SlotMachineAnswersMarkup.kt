@@ -23,7 +23,7 @@ fun slotMachineReplyMarkup(
     return inlineKeyboard {
         buttonsPreset.forEach(::add)
         if (adminCancelButton) {
-            row<InlineKeyboardButton>(fun InlineKeyboardRowBuilder.() {
+            row {
                 dataButton("Cancel (Admins only)", cancelData)
             })
         }
