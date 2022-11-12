@@ -2,7 +2,6 @@ package dev.inmo.plagubot.plugins.commands
 
 import dev.inmo.micro_utils.language_codes.IetfLanguageCode
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
-import dev.inmo.tgbotapi.types.commands.BotCommandScopeDefault
 import kotlinx.serialization.Serializable
 
 /**

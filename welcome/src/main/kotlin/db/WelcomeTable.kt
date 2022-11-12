@@ -3,11 +3,15 @@ package dev.inmo.plagubot.plugins.welcome.db
 import dev.inmo.micro_utils.repos.exposed.ExposedRepo
 import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.plagubot.plugins.common.IdChatIdentifier
-import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
 import dev.inmo.tgbotapi.types.IdChatIdentifier
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
 internal class WelcomeTable(

@@ -1,53 +1,61 @@
 package dev.inmo.plagubot.plugins.bans
 
 import com.benasher44.uuid.uuid4
-import dev.inmo.micro_utils.common.*
-import dev.inmo.micro_utils.coroutines.*
+import dev.inmo.micro_utils.common.Either
+import dev.inmo.micro_utils.common.either
+import dev.inmo.micro_utils.common.mapOnFirst
+import dev.inmo.micro_utils.common.mapOnSecond
+import dev.inmo.micro_utils.common.onFirst
+import dev.inmo.micro_utils.common.onSecond
+import dev.inmo.micro_utils.coroutines.safelyWithResult
 import dev.inmo.micro_utils.koin.singleWithBinds
-import dev.inmo.micro_utils.repos.*
+import dev.inmo.micro_utils.repos.add
+import dev.inmo.micro_utils.repos.set
 import dev.inmo.plagubot.Plugin
-import dev.inmo.plagubot.plugins.bans.db.*
 import dev.inmo.plagubot.plugins.bans.db.ChatsSettingsTable
 import dev.inmo.plagubot.plugins.bans.db.WarningsTable
+import dev.inmo.plagubot.plugins.bans.db.chatsSettingsTable
 import dev.inmo.plagubot.plugins.bans.db.warningsTable
 import dev.inmo.plagubot.plugins.bans.models.ChatSettings
 import dev.inmo.plagubot.plugins.bans.models.WorkMode
 import dev.inmo.plagubot.plugins.bans.utils.checkBanPluginEnabled
 import dev.inmo.plagubot.plugins.commands.BotCommandFullInfo
 import dev.inmo.plagubot.plugins.commands.CommandsKeeperKey
-import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
-import dev.inmo.plagubot.plugins.inline.buttons.inlineButtonsPlugin
-import dev.inmo.plagubot.plugins.inline.buttons.utils.*
 import dev.inmo.tgbotapi.abstracts.FromUser
-import dev.inmo.tgbotapi.extensions.api.answers.answer
-import dev.inmo.tgbotapi.extensions.api.chat.members.*
-import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
-import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
+import dev.inmo.tgbotapi.extensions.api.chat.members.banChatMember
+import dev.inmo.tgbotapi.extensions.api.chat.members.banChatSenderChat
+import dev.inmo.tgbotapi.extensions.api.chat.members.getChatMember
 import dev.inmo.tgbotapi.extensions.api.send.reply
-import dev.inmo.tgbotapi.extensions.api.send.sendMessage
-import dev.inmo.tgbotapi.extensions.behaviour_builder.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.utils.marker_factories.ByUserMessageMarkerFactory
 import dev.inmo.tgbotapi.extensions.utils.asUser
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
-import dev.inmo.tgbotapi.libraries.cache.admins.*
-import dev.inmo.tgbotapi.requests.send.SendTextMessage
-import dev.inmo.tgbotapi.types.*
-import dev.inmo.tgbotapi.types.message.textsources.*
-import dev.inmo.tgbotapi.types.chat.*
+import dev.inmo.tgbotapi.extensions.utils.userOrNull
+import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
+import dev.inmo.tgbotapi.libraries.cache.admins.doAfterVerification
+import dev.inmo.tgbotapi.libraries.cache.admins.verifyMessageFromAdmin
+import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.chat.Bot
+import dev.inmo.tgbotapi.types.chat.ChannelChat
 import dev.inmo.tgbotapi.types.chat.User
 import dev.inmo.tgbotapi.types.chat.member.AdministratorChatMember
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
-import dev.inmo.tgbotapi.types.message.abstracts.*
+import dev.inmo.tgbotapi.types.message.abstracts.AnonymousGroupContentMessage
+import dev.inmo.tgbotapi.types.message.abstracts.CommonGroupContentMessage
+import dev.inmo.tgbotapi.types.message.abstracts.GroupContentMessage
+import dev.inmo.tgbotapi.types.message.abstracts.Message
+import dev.inmo.tgbotapi.types.message.abstracts.UnconnectedFromChannelGroupContentMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
 import dev.inmo.tgbotapi.types.message.textsources.bold
+import dev.inmo.tgbotapi.types.message.textsources.code
 import dev.inmo.tgbotapi.types.message.textsources.mention
-import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
-import dev.inmo.tgbotapi.utils.*
-import kotlinx.coroutines.flow.*
-import kotlinx.serialization.*
+import dev.inmo.tgbotapi.types.message.textsources.plus
+import dev.inmo.tgbotapi.types.message.textsources.regular
+import dev.inmo.tgbotapi.utils.bold
+import dev.inmo.tgbotapi.utils.mention
+import dev.inmo.tgbotapi.utils.regular
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.Koin
@@ -348,7 +356,7 @@ class BanPlugin : Plugin {
                 }
                 val count = warningsRepository.count(messageToSearch.chat.id to user.id)
                 val maxCount = (chatsSettings.get(messageToSearch.chat.id) ?: ChatSettings()).warningsUntilBan
-                val mention = (user.asUser()) ?.let {
+                val mention = (user.userOrNull()) ?.let {
                     it.mention("${it.firstName} ${it.lastName}")
                 } ?: (user as? ChannelChat) ?.title ?.let(::regular) ?: return@onCommand
                 reply(

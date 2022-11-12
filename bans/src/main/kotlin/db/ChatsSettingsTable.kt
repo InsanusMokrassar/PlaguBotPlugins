@@ -2,21 +2,14 @@ package dev.inmo.plagubot.plugins.bans.db
 
 import dev.inmo.micro_utils.repos.KeyValueRepo
 import dev.inmo.micro_utils.repos.exposed.keyvalue.AbstractExposedKeyValueRepo
-import dev.inmo.micro_utils.repos.exposed.keyvalue.ExposedKeyValueRepo
-import dev.inmo.micro_utils.repos.mappers.withMapper
-import dev.inmo.plagubot.plugins.bans.utils.banPluginSerialFormat
 import dev.inmo.plagubot.plugins.bans.models.ChatSettings
+import dev.inmo.plagubot.plugins.bans.utils.banPluginSerialFormat
 import dev.inmo.plagubot.plugins.common.IdChatIdentifier
-import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.IdChatIdentifier
-import dev.inmo.tgbotapi.types.toChatId
-import kotlinx.serialization.builtins.PairSerializer
-import kotlinx.serialization.builtins.serializer
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ISqlExpressionBuilder
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.statements.UpdateBuilder

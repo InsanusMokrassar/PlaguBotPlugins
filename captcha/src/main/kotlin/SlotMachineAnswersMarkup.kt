@@ -2,8 +2,8 @@ package dev.inmo.plagubot.plugins.captcha
 
 import dev.inmo.plagubot.plugins.captcha.provider.cancelData
 import dev.inmo.tgbotapi.extensions.utils.SlotMachineReelImage
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
-import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
@@ -25,7 +25,7 @@ fun slotMachineReplyMarkup(
         if (adminCancelButton) {
             row {
                 dataButton("Cancel (Admins only)", cancelData)
-            })
+            }
         }
     }
 }

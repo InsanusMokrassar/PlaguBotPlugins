@@ -1,24 +1,25 @@
 package dev.inmo.plagubot.plugins.inline.buttons
 
-import dev.inmo.plagubot.*
-import dev.inmo.plagubot.plugins.inline.buttons.utils.*
+import dev.inmo.plagubot.Plugin
+import dev.inmo.plagubot.plugins.inline.buttons.utils.InlineButtonsKeys
+import dev.inmo.plagubot.plugins.inline.buttons.utils.drawerDataButton
+import dev.inmo.plagubot.plugins.inline.buttons.utils.extractChatIdAndData
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
-import dev.inmo.tgbotapi.extensions.api.send.*
+import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.formatting.makeUsernameLink
-import dev.inmo.tgbotapi.extensions.utils.requireGroupChat
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardRowBuilder
+import dev.inmo.tgbotapi.extensions.utils.groupChatOrThrow
+import dev.inmo.tgbotapi.extensions.utils.ifFromUser
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
-import dev.inmo.tgbotapi.extensions.utils.whenFromUser
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.libraries.cache.admins.doAfterVerification
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.UserId
-import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.chat.ExtendedBot
 import dev.inmo.tgbotapi.utils.code
 import dev.inmo.tgbotapi.utils.link
@@ -103,14 +104,14 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
         val me = koin.getOrNull<ExtendedBot>() ?: getMe()
         onCommand("settings") { commandMessage ->
             val verified = commandMessage.doAfterVerification(adminsApi) {
-                commandMessage.whenFromUser {
+                commandMessage.ifFromUser {
                     runCatching {
                         send(
                             it.user.id,
                             replyMarkup = createProvidersInlineKeyboard(commandMessage.chat.id, InlineButtonsKeys.Settings)
                         ) {
                             +"Settings for chat "
-                            code(commandMessage.chat.requireGroupChat().title)
+                            code(commandMessage.chat.groupChatOrThrow().title)
                         }
                     }.onFailure {
                         it.printStackTrace()

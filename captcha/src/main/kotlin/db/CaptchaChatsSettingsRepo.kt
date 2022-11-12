@@ -1,19 +1,19 @@
 package dev.inmo.plagubot.plugins.captcha.db
 
-import dev.inmo.micro_utils.coroutines.launchSynchronously
-import dev.inmo.micro_utils.repos.exposed.*
-import dev.inmo.micro_utils.repos.versions.VersionsRepo
+import dev.inmo.micro_utils.repos.exposed.AbstractExposedCRUDRepo
+import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.plagubot.plugins.captcha.provider.CaptchaProvider
 import dev.inmo.plagubot.plugins.captcha.provider.SimpleCaptchaProvider
-import dev.inmo.plagubot.plugins.captcha.settings.*
-import dev.inmo.tgbotapi.types.ChatId
+import dev.inmo.plagubot.plugins.captcha.settings.ChatSettings
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.toChatId
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.*
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.ISqlExpressionBuilder
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 
 private val captchaProviderSerialFormat = Json {
     ignoreUnknownKeys = true

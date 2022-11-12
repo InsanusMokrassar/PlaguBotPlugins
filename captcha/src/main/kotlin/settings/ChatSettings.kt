@@ -2,7 +2,6 @@ package dev.inmo.plagubot.plugins.captcha.settings
 
 import dev.inmo.plagubot.plugins.captcha.provider.CaptchaProvider
 import dev.inmo.plagubot.plugins.captcha.provider.SimpleCaptchaProvider
-import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import kotlinx.serialization.Serializable
 

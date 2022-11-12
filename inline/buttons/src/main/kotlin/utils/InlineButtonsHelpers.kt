@@ -1,11 +1,12 @@
 package dev.inmo.plagubot.plugins.inline.buttons.utils
 
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardBuilder
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.InlineKeyboardRowBuilder
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MessageThreadId
-import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.utils.row
 
 fun extractChatIdAndDataAndThread(data: String): Triple<IdChatIdentifier, MessageThreadId, String>? {

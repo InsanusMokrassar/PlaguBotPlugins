@@ -2,7 +2,10 @@ package dev.inmo.plagubot.plugins.inline.buttons
 
 import dev.inmo.plagubot.plugins.inline.buttons.utils.InlineButtonsKeys
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
-import dev.inmo.tgbotapi.types.*
+import dev.inmo.tgbotapi.types.ChatId
+import dev.inmo.tgbotapi.types.IdChatIdentifier
+import dev.inmo.tgbotapi.types.MessageId
+import dev.inmo.tgbotapi.types.UserId
 import org.koin.core.Koin
 
 /**
