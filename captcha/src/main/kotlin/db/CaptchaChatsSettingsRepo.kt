@@ -1,18 +1,19 @@
 package dev.inmo.plagubot.plugins.captcha.db
 
-import dev.inmo.micro_utils.coroutines.launchSynchronously
-import dev.inmo.micro_utils.repos.exposed.*
-import dev.inmo.micro_utils.repos.versions.VersionsRepo
+import dev.inmo.micro_utils.repos.exposed.AbstractExposedCRUDRepo
+import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.plagubot.plugins.captcha.provider.CaptchaProvider
 import dev.inmo.plagubot.plugins.captcha.provider.SimpleCaptchaProvider
-import dev.inmo.plagubot.plugins.captcha.settings.*
-import dev.inmo.tgbotapi.types.ChatId
+import dev.inmo.plagubot.plugins.captcha.settings.ChatSettings
+import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.toChatId
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.*
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.ISqlExpressionBuilder
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 
 private val captchaProviderSerialFormat = Json {
     ignoreUnknownKeys = true
@@ -22,10 +23,11 @@ private val defaultCaptchaProviderValue = captchaProviderSerialFormat.encodeToSt
 
 class CaptchaChatsSettingsRepo(
     override val database: Database
-) : AbstractExposedCRUDRepo<ChatSettings, ChatId, ChatSettings>(
+) : AbstractExposedCRUDRepo<ChatSettings, IdChatIdentifier, ChatSettings>(
     tableName = "CaptchaChatsSettingsRepo"
 ) {
     private val chatIdColumn = long("chatId")
+    private val threadIdColumn = long("threadId").nullable().default(null)
     private val captchaProviderColumn = text("captchaProvider").apply {
         default(defaultCaptchaProviderValue)
     }
@@ -37,16 +39,17 @@ class CaptchaChatsSettingsRepo(
 
     override val primaryKey = PrimaryKey(chatIdColumn)
 
-    override val selectByIds: ISqlExpressionBuilder.(List<ChatId>) -> Op<Boolean> = {
+    override val selectByIds: ISqlExpressionBuilder.(List<IdChatIdentifier>) -> Op<Boolean> = {
         chatIdColumn.inList(it.map { it.chatId })
     }
 
-    override fun createAndInsertId(value: ChatSettings, it: InsertStatement<Number>): ChatId? {
+    override fun createAndInsertId(value: ChatSettings, it: InsertStatement<Number>): IdChatIdentifier {
         it[chatIdColumn] = value.chatId.chatId
+        it[threadIdColumn] = value.chatId.threadId
         return value.chatId
     }
 
-    override fun update(id: ChatId?, value: ChatSettings, it: UpdateBuilder<Int>) {
+    override fun update(id: IdChatIdentifier?, value: ChatSettings, it: UpdateBuilder<Int>) {
         it[captchaProviderColumn] = captchaProviderSerialFormat.encodeToString(CaptchaProvider.serializer(), value.captchaProvider)
         it[autoRemoveCommandsColumn] = value.autoRemoveCommands
         it[autoRemoveEventsColumn] = value.autoRemoveEvents
@@ -65,7 +68,7 @@ class CaptchaChatsSettingsRepo(
         casEnabled = get(casColumn)
     )
 
-    override val selectById: ISqlExpressionBuilder.(ChatId) -> Op<Boolean> = { chatIdColumn.eq(it.chatId) }
+    override val selectById: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = { chatIdColumn.eq(it.chatId) }
     override val ResultRow.asObject: ChatSettings
         get() = ChatSettings(
             chatId = get(chatIdColumn).toChatId(),

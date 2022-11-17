@@ -1,10 +1,15 @@
 package dev.inmo.plagubot.plugins.commands
 
-import dev.inmo.kslog.common.*
+import dev.inmo.kslog.common.KSLog
+import dev.inmo.kslog.common.d
+import dev.inmo.kslog.common.e
+import dev.inmo.kslog.common.i
+import dev.inmo.kslog.common.logTag
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.plagubot.Plugin
-import dev.inmo.tgbotapi.extensions.api.bot.*
+import dev.inmo.tgbotapi.extensions.api.bot.deleteMyCommands
+import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.botCommandsLimit

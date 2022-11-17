@@ -2,29 +2,39 @@ package dev.inmo.plagubot.plugins.welcome
 
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
-import dev.inmo.plagubot.plugins.inline.buttons.utils.*
+import dev.inmo.plagubot.plugins.inline.buttons.utils.InlineButtonsKeys
+import dev.inmo.plagubot.plugins.inline.buttons.utils.extractChatIdAndData
+import dev.inmo.plagubot.plugins.inline.buttons.utils.inlineDataButton
 import dev.inmo.plagubot.plugins.welcome.db.WelcomeTable
 import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
+import dev.inmo.plagubot.plugins.welcome.model.sendWelcome
+import dev.inmo.tgbotapi.bot.exceptions.BotException
+import dev.inmo.tgbotapi.bot.exceptions.RequestException
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.edit.edit
-import dev.inmo.tgbotapi.extensions.api.send.*
+import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.libraries.cache.admins.doIfAdmin
-import dev.inmo.tgbotapi.types.*
+import dev.inmo.tgbotapi.types.IdChatIdentifier
+import dev.inmo.tgbotapi.types.MessageId
+import dev.inmo.tgbotapi.types.UserId
 import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.utils.row
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import org.koin.core.Koin
 
 internal class WelcomeInlineButtons(
     private val backDrawer: InlineButtonsDrawer,
-    private val welcomeTable: WelcomeTable
+    private val welcomeTable: WelcomeTable,
+    private val recacheChatId: IdChatIdentifier?
 ) : InlineButtonsDrawer {
     override val name: String
         get() = "Welcome"
@@ -32,7 +42,7 @@ internal class WelcomeInlineButtons(
         get() = "welcome"
 
     override suspend fun BehaviourContext.drawInlineButtons(
-        chatId: ChatId,
+        chatId: IdChatIdentifier,
         userId: UserId,
         messageId: MessageId,
         key: String?
@@ -132,15 +142,10 @@ internal class WelcomeInlineButtons(
 
                         drawInlineButtons(chatId, it.user.id, it.message.messageId, InlineButtonsKeys.Settings)
 
-                        deletedSettings ?.let {
-                            runCatchingSafely {
-                                copyMessage(
-                                    it.targetChatId,
-                                    it.sourceChatId,
-                                    it.sourceMessageId
-                                )
-                            }
-                        }
+                        deletedSettings ?.sendWelcome(
+                            this,
+                            recacheChatId
+                        )
 
                         answer(it)
                     }

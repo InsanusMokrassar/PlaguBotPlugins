@@ -1,35 +1,50 @@
 package dev.inmo.plagubot.plugins.captcha.settings
 
-import com.soywiz.klock.seconds
-import dev.inmo.micro_utils.repos.*
-import dev.inmo.micro_utils.repos.exposed.keyvalue.ExposedKeyValueRepo
-import dev.inmo.micro_utils.repos.mappers.withMapper
+import dev.inmo.micro_utils.repos.create
+import dev.inmo.micro_utils.repos.exposed.initTable
+import dev.inmo.micro_utils.repos.exposed.keyvalue.AbstractExposedKeyValueRepo
+import dev.inmo.micro_utils.repos.set
+import dev.inmo.micro_utils.repos.unset
 import dev.inmo.plagubot.plugins.captcha.db.CaptchaChatsSettingsRepo
-import dev.inmo.plagubot.plugins.captcha.provider.*
+import dev.inmo.plagubot.plugins.captcha.provider.ExpressionCaptchaProvider
+import dev.inmo.plagubot.plugins.captcha.provider.SimpleCaptchaProvider
+import dev.inmo.plagubot.plugins.captcha.provider.SlotMachineCaptchaProvider
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
-import dev.inmo.plagubot.plugins.inline.buttons.utils.*
+import dev.inmo.plagubot.plugins.inline.buttons.utils.InlineButtonsKeys
+import dev.inmo.plagubot.plugins.inline.buttons.utils.drawerDataButtonRow
+import dev.inmo.plagubot.plugins.inline.buttons.utils.extractChatIdAndData
+import dev.inmo.plagubot.plugins.inline.buttons.utils.inlineDataButton
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.delete
 import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.send.reply
-import dev.inmo.tgbotapi.extensions.behaviour_builder.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitText
+import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitTextMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.row
-import dev.inmo.tgbotapi.types.*
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
+import dev.inmo.tgbotapi.types.IdChatIdentifier
+import dev.inmo.tgbotapi.types.MessageId
+import dev.inmo.tgbotapi.types.UserId
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
-import kotlinx.coroutines.flow.*
+import dev.inmo.tgbotapi.utils.row
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.builtins.PairSerializer
 import kotlinx.serialization.builtins.serializer
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.ISqlExpressionBuilder
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.koin.core.Koin
-import kotlin.math.min
 
 class InlineSettings(
     private val backDrawer: InlineButtonsDrawer,
@@ -42,24 +57,55 @@ class InlineSettings(
     override val id: String
         get() = "captcha"
 
-    private val internalRepo = ExposedKeyValueRepo(
+    private class InternalRepo(
+        database: Database,
+        private val stringFormat: StringFormat
+    ) : AbstractExposedKeyValueRepo<Pair<UserId, MessageId>, IdChatIdentifier>(
         database,
-        { text("messageInfo") },
-        { long("chatId") },
         "captcha_inline_settings_associations"
-    ).let {
+    ) {
         val pairSerializer = PairSerializer(UserId.serializer(), MessageId.serializer())
 
-        it.withMapper<Pair<UserId, MessageId>, ChatId, String, Long>(
-            { stringFormat.encodeToString(pairSerializer, this) },
-            { chatId },
-            { stringFormat.decodeFromString(pairSerializer, this) },
-            { ChatId(this) },
-        )
+        override val keyColumn = text("messageInfo")
+        private val chatIdColumn = long("chatId")
+        private val threadIdColumn = long("threadId").nullable().default(null)
+        override val selectById: ISqlExpressionBuilder.(Pair<UserId, MessageId>) -> Op<Boolean> = {
+            keyColumn.eq(stringFormat.encodeToString(pairSerializer, it))
+        }
+        override val selectByValue: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = {
+            chatIdColumn.eq(it.chatId).and(threadIdColumn.eq(it.threadId))
+        }
+        override val ResultRow.asKey: Pair<UserId, MessageId>
+            get() = stringFormat.decodeFromString(pairSerializer, get(keyColumn))
+        override val ResultRow.asObject: IdChatIdentifier
+            get() = IdChatIdentifier(
+                get(chatIdColumn),
+                get(threadIdColumn)
+            )
+
+        init {
+            initTable()
+        }
+
+        override fun update(
+            k: Pair<UserId, MessageId>,
+            v: IdChatIdentifier,
+            it: UpdateBuilder<Int>
+        ) {
+            it[chatIdColumn] = v.chatId
+            it[threadIdColumn] = v.threadId
+        }
+
+        override fun insertKey(k: Pair<UserId, MessageId>, v: IdChatIdentifier, it: InsertStatement<Number>) {
+            it[keyColumn] = stringFormat.encodeToString(pairSerializer, k)
+        }
+
     }
 
+    private val internalRepo = InternalRepo(database, stringFormat)
+
     override suspend fun BehaviourContext.drawInlineButtons(
-        chatId: ChatId,
+        chatId: IdChatIdentifier,
         userId: UserId,
         messageId: MessageId,
         key: String?
@@ -128,13 +174,16 @@ class InlineSettings(
     ): InlineKeyboardMarkup {
         return inlineKeyboard {
             row {
-                dataButton("Use expressions${successfulSymbol.takeIf { _ -> it.captchaProvider is ExpressionCaptchaProvider } ?: ""}", useExpressionData)
+                dataButton("Use expressions${successfulSymbol.takeIf { _ -> it.captchaProvider is ExpressionCaptchaProvider } ?: ""}",
+                    useExpressionData)
             }
             row {
-                dataButton("Use slots${successfulSymbol.takeIf { _ -> it.captchaProvider is SlotMachineCaptchaProvider } ?: ""}", useSlotsData)
+                dataButton("Use slots${successfulSymbol.takeIf { _ -> it.captchaProvider is SlotMachineCaptchaProvider } ?: ""}",
+                    useSlotsData)
             }
             row {
-                dataButton("Use simple button${successfulSymbol.takeIf { _ -> it.captchaProvider is SimpleCaptchaProvider } ?: ""}", useSimpleData)
+                dataButton("Use simple button${successfulSymbol.takeIf { _ -> it.captchaProvider is SimpleCaptchaProvider } ?: ""}",
+                    useSimpleData)
             }
             row {
                 dataButton("Captcha time: ${it.captchaProvider.checkTimeSpan.seconds} seconds", providerCaptchaTimeData)
@@ -150,6 +199,7 @@ class InlineSettings(
                         dataButton("Attempts: ${provider.attempts}", expressionAttemptsData)
                     }
                 }
+
                 is SimpleCaptchaProvider -> {}
                 is SlotMachineCaptchaProvider -> {}
             }

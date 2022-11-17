@@ -1,19 +1,24 @@
 package dev.inmo.plagubot.plugins.welcome
 
-import dev.inmo.plagubot.plugins.welcome.db.WelcomeTable
-import dev.inmo.kslog.common.e
 import dev.inmo.kslog.common.logger
 import dev.inmo.plagubot.Plugin
 import dev.inmo.plagubot.plugins.commands.full
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
+import dev.inmo.plagubot.plugins.welcome.WelcomePlugin.Companion.pluginConfigSectionName
+import dev.inmo.plagubot.plugins.welcome.WelcomePlugin.Config
+import dev.inmo.plagubot.plugins.welcome.db.WelcomeTable
+import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
+import dev.inmo.plagubot.plugins.welcome.model.sendWelcome
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.delete
 import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
-import dev.inmo.tgbotapi.extensions.behaviour_builder.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitMessageDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.oneOf
+import dev.inmo.tgbotapi.extensions.behaviour_builder.parallel
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onNewChatMembers
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
@@ -23,19 +28,24 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatInlineKeyboard
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.types.BotCommand
+import dev.inmo.tgbotapi.types.FullChatIdentifierSerializer
+import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MilliSeconds
 import dev.inmo.tgbotapi.types.chat.GroupChat
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
 import dev.inmo.tgbotapi.types.message.abstracts.CommonGroupContentMessage
 import dev.inmo.tgbotapi.types.message.content.MessageContent
-import dev.inmo.tgbotapi.utils.*
-import kotlinx.coroutines.*
+import dev.inmo.tgbotapi.utils.bold
+import dev.inmo.tgbotapi.utils.regular
+import dev.inmo.tgbotapi.utils.underline
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.Koin
 import org.koin.core.module.Module
@@ -64,7 +74,9 @@ class WelcomePlugin : Plugin {
      */
     @Serializable
     private class Config(
-        val recheckOfAdmin: MilliSeconds = 60000L
+        val recheckOfAdmin: MilliSeconds = 60000L,
+        @Serializable(FullChatIdentifierSerializer::class)
+        val recacheChatId: IdChatIdentifier? = null
     )
 
     /**
@@ -74,7 +86,7 @@ class WelcomePlugin : Plugin {
         single { get<Json>().decodeFromJsonElement(Config.serializer(), params[pluginConfigSectionName] ?: return@single Config()) }
         single { WelcomeTable(database) }
         single(named("welcome")) { BotCommand("welcome", "Use to setup welcome message").full(BotCommandScope.AllChatAdministrators) }
-        single(named("welcome")) { WelcomeInlineButtons(get(), get()) } binds arrayOf(
+        single(named("welcome")) { WelcomeInlineButtons(get(), get(), get<Config>().recacheChatId) } binds arrayOf(
             InlineButtonsDrawer::class
         )
     }
@@ -193,16 +205,13 @@ class WelcomePlugin : Plugin {
         }
 
         onNewChatMembers {
-            val chatSettings = welcomeTable.get(it.chat.id)
+            val chatSettings = welcomeTable.get(it.chat.id) ?: return@onNewChatMembers
 
-            if (chatSettings == null) {
-                return@onNewChatMembers
-            }
-
-            reply(
-                it,
-                chatSettings.sourceChatId,
-                chatSettings.sourceMessageId
+            chatSettings.sendWelcome(
+                this,
+                config.recacheChatId,
+                it.chat.id,
+                it.messageId
             )
         }
     }
