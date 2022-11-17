@@ -8,6 +8,7 @@ import dev.inmo.plagubot.plugins.welcome.WelcomePlugin.Companion.pluginConfigSec
 import dev.inmo.plagubot.plugins.welcome.WelcomePlugin.Config
 import dev.inmo.plagubot.plugins.welcome.db.WelcomeTable
 import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
+import dev.inmo.plagubot.plugins.welcome.model.sendWelcome
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.delete
 import dev.inmo.tgbotapi.extensions.api.edit.edit
@@ -27,6 +28,8 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatInlineKeyboard
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.types.BotCommand
+import dev.inmo.tgbotapi.types.FullChatIdentifierSerializer
+import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MilliSeconds
 import dev.inmo.tgbotapi.types.chat.GroupChat
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
@@ -71,7 +74,9 @@ class WelcomePlugin : Plugin {
      */
     @Serializable
     private class Config(
-        val recheckOfAdmin: MilliSeconds = 60000L
+        val recheckOfAdmin: MilliSeconds = 60000L,
+        @Serializable(FullChatIdentifierSerializer::class)
+        val recacheChatId: IdChatIdentifier? = null
     )
 
     /**
@@ -81,7 +86,7 @@ class WelcomePlugin : Plugin {
         single { get<Json>().decodeFromJsonElement(Config.serializer(), params[pluginConfigSectionName] ?: return@single Config()) }
         single { WelcomeTable(database) }
         single(named("welcome")) { BotCommand("welcome", "Use to setup welcome message").full(BotCommandScope.AllChatAdministrators) }
-        single(named("welcome")) { WelcomeInlineButtons(get(), get()) } binds arrayOf(
+        single(named("welcome")) { WelcomeInlineButtons(get(), get(), get<Config>().recacheChatId) } binds arrayOf(
             InlineButtonsDrawer::class
         )
     }
@@ -200,16 +205,13 @@ class WelcomePlugin : Plugin {
         }
 
         onNewChatMembers {
-            val chatSettings = welcomeTable.get(it.chat.id)
+            val chatSettings = welcomeTable.get(it.chat.id) ?: return@onNewChatMembers
 
-            if (chatSettings == null) {
-                return@onNewChatMembers
-            }
-
-            reply(
-                it,
-                chatSettings.sourceChatId,
-                chatSettings.sourceMessageId
+            chatSettings.sendWelcome(
+                this,
+                config.recacheChatId,
+                it.chat.id,
+                it.messageId
             )
         }
     }

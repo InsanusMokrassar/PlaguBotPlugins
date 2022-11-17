@@ -4,9 +4,9 @@
 
 * `Versions`:
   * `kotlin`: `1.7.21`
-  * `plagubot`: `3.1.2`
+  * `plagubot`: `3.1.3`
   * `microutils`: `0.14.2`
-  * `tgbotapi libraries`: `0.6.2`
+  * `tgbotapi libraries`: `0.6.3`
 
 ## 0.6.0
 

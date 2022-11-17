@@ -1,6 +1,7 @@
 package dev.inmo.plagubot.plugins.captcha.settings
 
 import dev.inmo.micro_utils.repos.create
+import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.micro_utils.repos.exposed.keyvalue.AbstractExposedKeyValueRepo
 import dev.inmo.micro_utils.repos.set
 import dev.inmo.micro_utils.repos.unset
@@ -81,6 +82,10 @@ class InlineSettings(
                 get(chatIdColumn),
                 get(threadIdColumn)
             )
+
+        init {
+            initTable()
+        }
 
         override fun update(
             k: Pair<UserId, MessageId>,
