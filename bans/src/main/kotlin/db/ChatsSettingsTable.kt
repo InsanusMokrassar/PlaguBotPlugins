@@ -1,6 +1,7 @@
 package dev.inmo.plagubot.plugins.bans.db
 
 import dev.inmo.micro_utils.repos.KeyValueRepo
+import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.micro_utils.repos.exposed.keyvalue.AbstractExposedKeyValueRepo
 import dev.inmo.plagubot.plugins.bans.models.ChatSettings
 import dev.inmo.plagubot.plugins.bans.utils.banPluginSerialFormat
@@ -37,6 +38,10 @@ private class ExposedChatsSettingsTable(
         )
     override val ResultRow.asObject: ChatSettings
         get() = banPluginSerialFormat.decodeFromString(ChatSettings.serializer(), get(chatSettingsColumn))
+
+    init {
+        initTable()
+    }
 
     override fun update(k: IdChatIdentifier, v: ChatSettings, it: UpdateBuilder<Int>) {
         it[chatSettingsColumn] = banPluginSerialFormat.encodeToString(ChatSettings.serializer(), v)
