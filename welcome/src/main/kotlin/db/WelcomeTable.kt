@@ -2,7 +2,6 @@ package dev.inmo.plagubot.plugins.welcome.db
 
 import dev.inmo.micro_utils.repos.exposed.ExposedRepo
 import dev.inmo.micro_utils.repos.exposed.initTable
-import dev.inmo.plagubot.plugins.common.IdChatIdentifier
 import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import org.jetbrains.exposed.sql.Database

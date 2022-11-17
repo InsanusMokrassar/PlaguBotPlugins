@@ -4,7 +4,6 @@ import dev.inmo.micro_utils.repos.KeyValueRepo
 import dev.inmo.micro_utils.repos.exposed.keyvalue.AbstractExposedKeyValueRepo
 import dev.inmo.plagubot.plugins.bans.models.ChatSettings
 import dev.inmo.plagubot.plugins.bans.utils.banPluginSerialFormat
-import dev.inmo.plagubot.plugins.common.IdChatIdentifier
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ISqlExpressionBuilder

@@ -8,7 +8,6 @@ import dev.inmo.plagubot.plugins.captcha.db.CaptchaChatsSettingsRepo
 import dev.inmo.plagubot.plugins.captcha.provider.ExpressionCaptchaProvider
 import dev.inmo.plagubot.plugins.captcha.provider.SimpleCaptchaProvider
 import dev.inmo.plagubot.plugins.captcha.provider.SlotMachineCaptchaProvider
-import dev.inmo.plagubot.plugins.common.IdChatIdentifier
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
 import dev.inmo.plagubot.plugins.inline.buttons.utils.InlineButtonsKeys
 import dev.inmo.plagubot.plugins.inline.buttons.utils.drawerDataButtonRow

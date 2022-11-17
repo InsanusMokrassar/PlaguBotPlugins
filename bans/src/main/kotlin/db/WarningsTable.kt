@@ -4,7 +4,6 @@ import dev.inmo.micro_utils.repos.KeyValuesRepo
 import dev.inmo.micro_utils.repos.exposed.onetomany.ExposedKeyValuesRepo
 import dev.inmo.micro_utils.repos.mappers.withMapper
 import dev.inmo.plagubot.plugins.bans.utils.banPluginSerialFormat
-import dev.inmo.plagubot.plugins.common.FullChatIdentifierSerializer
 import dev.inmo.tgbotapi.types.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
