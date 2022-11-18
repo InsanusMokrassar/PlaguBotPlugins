@@ -73,7 +73,7 @@ class InlineSettings(
             keyColumn.eq(stringFormat.encodeToString(pairSerializer, it))
         }
         override val selectByValue: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = {
-            chatIdColumn.eq(it.chatId).and(threadIdColumn.eq(it.threadId))
+            chatIdColumn.eq(it.chatId).and(it.threadId ?.let { threadIdColumn.eq(it) } ?: threadIdColumn.isNull())
         }
         override val ResultRow.asKey: Pair<UserId, MessageId>
             get() = stringFormat.decodeFromString(pairSerializer, get(keyColumn))
