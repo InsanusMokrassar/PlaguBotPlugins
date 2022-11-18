@@ -26,7 +26,7 @@ private class ExposedChatsSettingsTable(
     private val threadIdColumn = long("threadId").nullable().default(null)
     private val chatSettingsColumn = text("userId")
     override val selectById: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = {
-        keyColumn.eq(it.chatId).and(threadIdColumn.eq(it.threadId))
+        keyColumn.eq(it.chatId).and(it.threadId ?.let { threadIdColumn.eq(it) } ?: threadIdColumn.isNull())
     }
     override val selectByValue: ISqlExpressionBuilder.(ChatSettings) -> Op<Boolean> = {
         chatSettingsColumn.eq(banPluginSerialFormat.encodeToString(ChatSettings.serializer(), it))

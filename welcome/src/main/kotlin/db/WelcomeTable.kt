@@ -6,6 +6,7 @@ import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
@@ -29,7 +30,7 @@ internal class WelcomeTable(
 
     private fun getInTransaction(chatId: IdChatIdentifier) = select {
         targetChatIdColumn.eq(chatId.chatId).and(
-            targetThreadIdColumn.eq(chatId.threadId)
+            chatId.threadId ?.let { targetThreadIdColumn.eq(it) } ?: targetThreadIdColumn.isNull()
         )
     }.limit(1).firstOrNull() ?.let {
         ChatSettings(
@@ -62,7 +63,7 @@ internal class WelcomeTable(
 
     fun unset(chatId: IdChatIdentifier): ChatSettings? = transaction(database) {
         getInTransaction(chatId) ?.also {
-            deleteWhere { targetChatIdColumn.eq(chatId.chatId).and(targetThreadIdColumn.eq(chatId.threadId)) }
+            deleteWhere { targetChatIdColumn.eq(chatId.chatId).and(chatId.threadId ?.let { targetThreadIdColumn.eq(it) } ?: targetThreadIdColumn.isNull()) }
         }
     }
 }
