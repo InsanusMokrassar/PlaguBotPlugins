@@ -2,6 +2,8 @@
 
 ## 0.6.2
 
+* Fixes in thread-related databases
+
 ## 0.6.1
 
 * `Versions`:
