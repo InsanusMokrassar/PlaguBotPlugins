@@ -21,7 +21,9 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitTextMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.utils.chatIdOrNull
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
+import dev.inmo.tgbotapi.extensions.utils.ifChatId
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.types.IdChatIdentifier
@@ -213,12 +215,15 @@ class InlineSettings(
         suspend fun defaultListener(
             data: String,
             onComplete: suspend BehaviourContext.(ChatSettings, MessageDataCallbackQuery) -> Unit = { it, query ->
-                drawInlineButtons(it.chatId, query.message.chat.id, query.message.messageId, InlineButtonsKeys.Settings)
+                query.message.chat.id.ifChatId { id ->
+                    drawInlineButtons(it.chatId, id, query.message.messageId, InlineButtonsKeys.Settings)
+                }
             },
             onTrigger: suspend ChatSettings.() -> ChatSettings
         ) {
             onMessageDataCallbackQuery(initialFilter = { it.data == data }) {
-                val chatId = internalRepo.get(it.message.chat.id to it.message.messageId) ?: return@onMessageDataCallbackQuery
+                val replyChatId = it.message.chat.id.chatIdOrNull() ?: return@onMessageDataCallbackQuery
+                val chatId = internalRepo.get(replyChatId to it.message.messageId) ?: return@onMessageDataCallbackQuery
 
                 val chatSettings = chatsSettingsRepo.getById(chatId)
 
@@ -240,7 +245,8 @@ class InlineSettings(
             onTrigger: (ChatSettings) -> InlineKeyboardMarkup
         ) {
             onMessageDataCallbackQuery(initialFilter = { it.data == data }) {
-                val chatId = internalRepo.get(it.message.chat.id to it.message.messageId) ?: return@onMessageDataCallbackQuery
+                val replyChatId = it.message.chat.id.chatIdOrNull() ?: return@onMessageDataCallbackQuery
+                val chatId = internalRepo.get(replyChatId to it.message.messageId) ?: return@onMessageDataCallbackQuery
 
                 val chatSettings = chatsSettingsRepo.getById(chatId)
 
@@ -262,7 +268,8 @@ class InlineSettings(
             onTrigger: suspend ChatSettings.(Int) -> ChatSettings
         ) {
             onMessageDataCallbackQuery(initialFilter = { it.data == data }) {
-                val chatId = internalRepo.get(it.message.chat.id to it.message.messageId) ?: return@onMessageDataCallbackQuery
+                val replyChatId = it.message.chat.id.chatIdOrNull() ?: return@onMessageDataCallbackQuery
+                val chatId = internalRepo.get(replyChatId to it.message.messageId) ?: return@onMessageDataCallbackQuery
 
                 val chatSettings = chatsSettingsRepo.getById(chatId)
 
@@ -468,8 +475,9 @@ class InlineSettings(
 
         onMessageDataCallbackQuery {
             val (_, data) = extractChatIdAndData(it.data) ?: return@onMessageDataCallbackQuery
+            val replyChatId = it.message.chat.id.chatIdOrNull() ?: return@onMessageDataCallbackQuery
             if (data == backDrawer.id) {
-                internalRepo.unset(it.message.chat.id to it.message.messageId)
+                internalRepo.unset(replyChatId to it.message.messageId)
             }
             answer(it)
         }

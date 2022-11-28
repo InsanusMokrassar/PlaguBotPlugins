@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.3
+
+* `Versions`:
+  * `plagubot`: `3.1.4`
+  * `microutils`: `0.14.4`
+  * `tgbotapi libraries`: `0.6.4`
+
 ## 0.6.2
 
 * Fixes in thread-related databases
