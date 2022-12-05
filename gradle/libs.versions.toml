@@ -1,13 +1,13 @@
 [versions]
 
-kotlin = "1.7.21"
+kotlin = "1.7.22"
 kotlin-serialization = "1.4.1"
 
-plagubot = "3.1.4"
-kslog = "0.5.3"
-microutils = "0.14.4"
+plagubot = "3.2.0"
+kslog = "0.5.4"
+microutils = "0.15.0"
 
-tgbotapi-libraries = "0.6.4"
+tgbotapi-libraries = "0.6.5"
 
 gh-release = "2.4.1"
 dokka = "1.7.20"
