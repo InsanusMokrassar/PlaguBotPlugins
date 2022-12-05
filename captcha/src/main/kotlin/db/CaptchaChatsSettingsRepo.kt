@@ -43,7 +43,7 @@ class CaptchaChatsSettingsRepo(
 
     override val selectByIds: ISqlExpressionBuilder.(List<IdChatIdentifier>) -> Op<Boolean> = {
         fun IdChatIdentifier.createEq() = chatIdColumn.eq(chatId).and(
-            threadId ?.let { threadIdColumn.eq(it) } ?: Op.TRUE
+            threadId ?.let { threadIdColumn.eq(it) } ?: threadIdColumn.isNull()
         )
         it.foldRight(Op.FALSE as Op<Boolean>) { input, acc ->
             acc.or(input.createEq())
