@@ -2,6 +2,13 @@
 
 ## 0.6.4
 
+* `Versions`:
+  * `kotlin`: `1.7.22`
+  * `plagubot`: `3.2.0`
+  * `kslog`: `0.5.4`
+  * `microutils`: `0.15.0`
+  * `tgbotapi libraries`: `0.6.5`
+
 ## 0.6.3
 
 * `Versions`:
