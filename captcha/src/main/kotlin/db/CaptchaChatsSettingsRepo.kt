@@ -45,7 +45,7 @@ class CaptchaChatsSettingsRepo(
         fun IdChatIdentifier.createEq() = chatIdColumn.eq(chatId).and(
             threadId ?.let { threadIdColumn.eq(it) } ?: Op.TRUE
         )
-        it.foldRight(Op.TRUE as Op<Boolean>) { input, acc ->
+        it.foldRight(Op.FALSE as Op<Boolean>) { input, acc ->
             acc.or(input.createEq())
         }
     }
