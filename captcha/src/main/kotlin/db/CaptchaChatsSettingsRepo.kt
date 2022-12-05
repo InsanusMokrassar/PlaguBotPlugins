@@ -42,6 +42,8 @@ class CaptchaChatsSettingsRepo(
     override val selectByIds: ISqlExpressionBuilder.(List<IdChatIdentifier>) -> Op<Boolean> = {
         chatIdColumn.inList(it.map { it.chatId })
     }
+    override val ResultRow.asId: IdChatIdentifier
+        get() = IdChatIdentifier(get(chatIdColumn), get(threadIdColumn))
 
     override fun createAndInsertId(value: ChatSettings, it: InsertStatement<Number>): IdChatIdentifier {
         it[chatIdColumn] = value.chatId.chatId
@@ -59,7 +61,7 @@ class CaptchaChatsSettingsRepo(
     }
 
     override fun InsertStatement<Number>.asObject(value: ChatSettings): ChatSettings = ChatSettings(
-        chatId = get(chatIdColumn).toChatId(),
+        chatId = IdChatIdentifier(get(chatIdColumn), get(threadIdColumn)),
         captchaProvider = captchaProviderSerialFormat.decodeFromString(CaptchaProvider.serializer(), get(captchaProviderColumn)),
         autoRemoveCommands = get(autoRemoveCommandsColumn),
         autoRemoveEvents = get(autoRemoveEventsColumn),
@@ -71,7 +73,7 @@ class CaptchaChatsSettingsRepo(
     override val selectById: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = { chatIdColumn.eq(it.chatId) }
     override val ResultRow.asObject: ChatSettings
         get() = ChatSettings(
-            chatId = get(chatIdColumn).toChatId(),
+            chatId = asId,
             captchaProvider = captchaProviderSerialFormat.decodeFromString(CaptchaProvider.serializer(), get(captchaProviderColumn)),
             autoRemoveCommands = get(autoRemoveCommandsColumn),
             autoRemoveEvents = get(autoRemoveEventsColumn),
