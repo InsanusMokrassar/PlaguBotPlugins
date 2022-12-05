@@ -12,6 +12,8 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ISqlExpressionBuilder
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 
@@ -40,7 +42,12 @@ class CaptchaChatsSettingsRepo(
     override val primaryKey = PrimaryKey(chatIdColumn)
 
     override val selectByIds: ISqlExpressionBuilder.(List<IdChatIdentifier>) -> Op<Boolean> = {
-        chatIdColumn.inList(it.map { it.chatId })
+        fun IdChatIdentifier.createEq() = chatIdColumn.eq(chatId).and(
+            threadId ?.let { threadIdColumn.eq(it) } ?: Op.TRUE
+        )
+        it.foldRight(Op.TRUE as Op<Boolean>) { input, acc ->
+            acc.or(input.createEq())
+        }
     }
     override val ResultRow.asId: IdChatIdentifier
         get() = IdChatIdentifier(get(chatIdColumn), get(threadIdColumn))
