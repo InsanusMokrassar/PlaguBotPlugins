@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.6
+
+* `Versions`:
+  * `plagubot`: `3.2.2`
+  * `microutils`: `0.16.2`
+  * `tgbotapi libraries`: `0.6.7`
+
 ## 0.6.5
 
 * `Versions`:
