@@ -1,14 +1,6 @@
 package dev.inmo.plagubot.plugins.captcha
 
-import dev.inmo.tgbotapi.types.chat.ChatPermissions
+import dev.inmo.tgbotapi.types.chat.RestrictionsChatPermissions
 
-val authorizedUserChatPermissions = ChatPermissions(
-    canSendMessages = true,
-    canSendMediaMessages = true,
-    canSendPolls = true,
-    canSendOtherMessages = true,
-    canAddWebPagePreviews = true,
-    canChangeInfo = true,
-    canInviteUsers = true,
-    canPinMessages = true,
-)
+@Deprecated("Useless", ReplaceWith("RestrictionsChatPermissions", "dev.inmo.tgbotapi.types.chat.RestrictionsChatPermissions"))
+val authorizedUserChatPermissions = RestrictionsChatPermissions
