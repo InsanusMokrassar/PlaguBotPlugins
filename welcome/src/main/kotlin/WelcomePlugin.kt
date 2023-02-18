@@ -15,6 +15,7 @@ import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitAnyContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.oneOf
@@ -145,7 +146,7 @@ class WelcomePlugin : Plugin {
                     answer(query)
                 },
                 parallel {
-                    val message = waitContentMessage().filter {
+                    val message = waitAnyContentMessage().filter {
                         it.sameChat(sentMessage)
                     }.first()
 

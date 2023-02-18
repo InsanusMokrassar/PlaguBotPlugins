@@ -15,6 +15,7 @@ import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitAnyContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
@@ -102,7 +103,7 @@ internal class WelcomeInlineButtons(
                             "Ok, send me new welcome message or /cancel"
                         )
 
-                        val sentByUser = waitContentMessage().filter {
+                        val sentByUser = waitAnyContentMessage().filter {
                             it.sameChat(sent)
                         }.first()
 
