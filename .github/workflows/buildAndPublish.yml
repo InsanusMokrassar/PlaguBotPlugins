@@ -11,7 +11,7 @@ jobs:
       - name: Update version
         run: |
           branch="`echo "${{ github.ref }}" | grep -o "[^/]*$"`"
-          sed -i -e "s/^project_version=\([0-9\.]*\)/project_version=\1-branch_$branch-build${{ github.run_number }}/" gradle.properties
+          sed -i -e "s/^version=\([0-9\.]*\)/version=\1-branch_$branch-build${{ github.run_number }}/" gradle.properties
       - name: prebuild
         run: ./gradlew clean build
         env:
