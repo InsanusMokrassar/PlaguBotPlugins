@@ -2,6 +2,10 @@
 
 ## 0.9.3
 
+* `Versions`:
+  * `plagubot`: `4.0.3`
+  * `microutils`: `0.17.2`
+  * `tgbotapi libraries`: `0.9.3`
 * `Inline`:
   * `Buttons`:
     * Settings have been disabled by 
