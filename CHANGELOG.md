@@ -2,6 +2,10 @@
 
 ## 0.9.3
 
+* `Inline`:
+  * `Buttons`:
+    * Settings have been disabled by 
+
 ## 0.9.2
 
 * `Versions`:
