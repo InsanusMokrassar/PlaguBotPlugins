@@ -49,7 +49,7 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
         val provider = providersMap[providerId] ?: takeIf { id == providerId }
         return chatId to provider
     }
-    private fun createProvidersInlineKeyboard(chatId: IdChatIdentifier, key: String?) = inlineKeyboard {
+    internal fun createProvidersInlineKeyboard(chatId: IdChatIdentifier, key: String?) = inlineKeyboard {
         providersMap.values.let {
             key ?.let { _ ->
                 it.filter {
@@ -97,46 +97,14 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
     }
 
     override suspend fun BehaviourContext.setupBotPlugin(koin: Koin) {
-        koin.getAll<InlineButtonsDrawer>().distinct().forEach {
+        koin.getAll<InlineButtonsDrawer>().distinct().onEach {
             register(it)
-        }
-        val adminsApi = koin.get<AdminsCacheAPI>()
-        val me = koin.getOrNull<ExtendedBot>() ?: getMe()
-        onCommand("settings") { commandMessage ->
-            val verified = commandMessage.doAfterVerification(adminsApi) {
-                commandMessage.ifFromUser {
-                    runCatching {
-                        send(
-                            it.user.id,
-                            replyMarkup = createProvidersInlineKeyboard(commandMessage.chat.id, InlineButtonsKeys.Settings)
-                        ) {
-                            +"Settings for chat "
-                            code(commandMessage.chat.groupChatOrThrow().title)
-                        }
-                    }.onFailure {
-                        it.printStackTrace()
-                        reply(
-                            commandMessage
-                        ) {
-                            +"Looks like you didn't started the bot. Please "
-                            link("start", makeUsernameLink(me.username.usernameWithoutAt))
-                            +" bot and try again"
-                        }
-                    }
-                }
-                true
-            }
-            if (verified == true) {
-                return@onCommand
-            }
-            reply(commandMessage, "Only admins may trigger settings")
-        }
-
-        koin.getAll<InlineButtonsDrawer>().distinct().forEach {
+        }.forEach {
             with(it) {
                 setupReactions(koin)
             }
         }
+
         setupReactions(koin)
     }
 }
