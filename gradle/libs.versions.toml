@@ -3,11 +3,11 @@
 kotlin = "1.8.10"
 kotlin-serialization = "1.5.0"
 
-plagubot = "4.1.0"
+plagubot = "5.0.0"
 kslog = "1.0.0"
-microutils = "0.17.3"
+microutils = "0.17.5"
 
-tgbotapi-libraries = "0.9.4"
+tgbotapi-libraries = "0.10.0"
 
 gh-release = "2.4.1"
 dokka = "1.8.10"
