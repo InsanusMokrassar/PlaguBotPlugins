@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.0
+
+* `Versions`:
+  * `tgbotapi`: `7.1.0`
+  * `tgbotapi libraries`: `0.11.0`
+
 ## 0.10.2
 
 * `Versions`:
