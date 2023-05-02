@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.1
+
+* `Versions`:
+    * `kotlin`: `1.8.21`
+    * `plagubot`: `5.1.1`
+    * `microutils`: `0.18.0`
+    * `tgbotali libraries`: `0.11.1`
+
 ## 0.11.0
 
 * `Versions`:
