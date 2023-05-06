@@ -2,6 +2,11 @@
 
 ## 0.11.2
 
+* `Versions`:
+  * `plagubot`: `5.1.2`
+  * `microutils`: `0.18.1`
+  * `tgbotali libraries`: `0.11.2`
+
 ## 0.11.1
 
 * `Versions`:
