@@ -60,9 +60,9 @@ sealed class CaptchaProvider {
     abstract val checkTimeSpan: TimeSpan
 
     interface CaptchaProviderWorker {
-        suspend fun BehaviourContext.doCaptcha(): Boolean
+        suspend fun BehaviourContext.doCaptcha(): Boolean?
 
-        suspend fun BehaviourContext.onCloseCaptcha(passed: Boolean)
+        suspend fun BehaviourContext.onCloseCaptcha(passed: Boolean?)
     }
 
     protected abstract suspend fun allocateWorker(
@@ -126,6 +126,11 @@ sealed class CaptchaProvider {
                     }.getOrElse { false }
 
                     when {
+                        passed == null -> {
+                            send(chat, " ") {
+                                +"User" + mention(user) + underline("blocked me") + ", so, I can't perform check with captcha"
+                            }
+                        }
                         passed -> {
                             if (joinRequest) {
                                 safelyWithoutExceptions {
@@ -227,17 +232,21 @@ data class SlotMachineCaptchaProvider(
     ) : CaptchaProviderWorker {
         private val messagesToDelete = mutableListOf<Message>()
 
-        override suspend fun BehaviourContext.doCaptcha(): Boolean {
+        override suspend fun BehaviourContext.doCaptcha(): Boolean? {
             val baseBuilder: EntitiesBuilderBody = {
                 mention(user)
                 regular(", $captchaText")
             }
-            val sentMessage = send(
-                if (writeUserDirectly) user else chat,
-            ) {
-                baseBuilder()
-                +": ✖✖✖"
-            }.also { messagesToDelete.add(it) }
+            val sentMessage = runCatchingSafely {
+                send(
+                    if (writeUserDirectly) user else chat,
+                ) {
+                    baseBuilder()
+                    +": ✖✖✖"
+                }.also { messagesToDelete.add(it) }
+            }.getOrElse {
+                return null
+            }
             val sentDice = sendDice(
                 sentMessage.chat,
                 SlotMachineDiceAnimationType,
@@ -287,7 +296,7 @@ data class SlotMachineCaptchaProvider(
             return true
         }
 
-        override suspend fun BehaviourContext.onCloseCaptcha(passed: Boolean) {
+        override suspend fun BehaviourContext.onCloseCaptcha(passed: Boolean?) {
             while (messagesToDelete.isNotEmpty()) {
                 runCatchingSafely { delete(messagesToDelete.removeFirst()) }
             }
@@ -322,23 +331,27 @@ data class SimpleCaptchaProvider(
         private val writeUserDirectly: Boolean
     ) : CaptchaProviderWorker {
         private var sentMessage: Message? = null
-        override suspend fun BehaviourContext.doCaptcha(): Boolean {
+        override suspend fun BehaviourContext.doCaptcha(): Boolean? {
             val callbackData = uuid4().toString()
-            val sentMessage = send(
-                if (writeUserDirectly) user else chat,
-                replyMarkup = inlineKeyboard {
-                    row {
-                        dataButton(buttonText, callbackData)
-                    }
-                    if (adminsApi != null) {
+            val sentMessage = runCatchingSafely {
+                send(
+                    if (writeUserDirectly) user else chat,
+                    replyMarkup = inlineKeyboard {
                         row {
-                            dataButton("Cancel (Admins only)", cancelData)
+                            dataButton(buttonText, callbackData)
+                        }
+                        if (adminsApi != null) {
+                            row {
+                                dataButton("Cancel (Admins only)", cancelData)
+                            }
                         }
                     }
+                ) {
+                    mention(user)
+                    regular(", $captchaText")
                 }
-            ) {
-                mention(user)
-                regular(", $captchaText")
+            }.getOrElse {
+                return null
             }
             this@Worker.sentMessage = sentMessage
 
@@ -370,7 +383,7 @@ data class SimpleCaptchaProvider(
             return true
         }
 
-        override suspend fun BehaviourContext.onCloseCaptcha(passed: Boolean) {
+        override suspend fun BehaviourContext.onCloseCaptcha(passed: Boolean?) {
             sentMessage ?.let {
                 delete(it)
             }
@@ -454,7 +467,7 @@ data class ExpressionCaptchaProvider(
         private val reactOnJoinRequest: Boolean
     ) : CaptchaProviderWorker {
         private var sentMessage: Message? = null
-        override suspend fun BehaviourContext.doCaptcha(): Boolean {
+        override suspend fun BehaviourContext.doCaptcha(): Boolean? {
             val callbackData = ExpressionBuilder.createExpression(
                 maxPerNumber,
                 operations
@@ -466,24 +479,28 @@ data class ExpressionCaptchaProvider(
                 val correctAnswerPosition = Random.nextInt(orderedAnswers.size)
                 orderedAnswers.add(correctAnswerPosition, callbackData.first)
             }.toList()
-            val sentMessage = send(
-                if (reactOnJoinRequest) user else chat,
-                replyMarkup = inlineKeyboard {
-                    answers.map {
-                        CallbackDataInlineKeyboardButton(it.toString(), it.toString())
-                    }.chunked(3).forEach(::add)
-                    if (adminsApi != null) {
-                        row {
-                            dataButton("Cancel (Admins only)", cancelData)
+            val sentMessage = runCatchingSafely {
+                send(
+                    if (reactOnJoinRequest) user else chat,
+                    replyMarkup = inlineKeyboard {
+                        answers.map {
+                            CallbackDataInlineKeyboardButton(it.toString(), it.toString())
+                        }.chunked(3).forEach(::add)
+                        if (adminsApi != null) {
+                            row {
+                                dataButton("Cancel (Admins only)", cancelData)
+                            }
                         }
                     }
+                ) {
+                    mention(user)
+                    regular(", $captchaText ")
+                    bold(callbackData.second)
+                }.also {
+                    sentMessage = it
                 }
-            ) {
-                mention(user)
-                regular(", $captchaText ")
-                bold(callbackData.second)
-            }.also {
-                sentMessage = it
+            }.getOrElse {
+                return null
             }
 
             var leftAttempts = attempts
@@ -515,7 +532,7 @@ data class ExpressionCaptchaProvider(
             }.firstOrNull() ?: false
         }
 
-        override suspend fun BehaviourContext.onCloseCaptcha(passed: Boolean) {
+        override suspend fun BehaviourContext.onCloseCaptcha(passed: Boolean?) {
             sentMessage ?.let {
                 delete(it)
             }
