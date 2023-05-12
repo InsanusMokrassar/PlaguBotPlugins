@@ -1,5 +1,6 @@
 package dev.inmo.plagubot.plugins.captcha.settings
 
+import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.micro_utils.repos.create
 import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.micro_utils.repos.exposed.keyvalue.AbstractExposedKeyValueRepo
@@ -155,8 +156,8 @@ class InlineSettings(
                             }
                         ),
                         CallbackDataInlineKeyboardButton(
-                            "${if (chatSettings.casEnabled) successfulSymbol else unsuccessfulSymbol}Send in private",
-                            if (chatSettings.casEnabled) {
+                            "${if (chatSettings.sendCaptchaInPrivate) successfulSymbol else unsuccessfulSymbol}Send in private",
+                            if (chatSettings.sendCaptchaInPrivate) {
                                 disableSendInPrivateData
                             } else {
                                 enableSendInPrivateData
@@ -243,7 +244,9 @@ class InlineSettings(
                     chatsSettingsRepo.update(chatId, newChatSettings)
                 }
 
-                onComplete(newChatSettings, it)
+                runCatchingSafely {
+                    onComplete(newChatSettings, it)
+                }
 
                 answer(it)
             }
