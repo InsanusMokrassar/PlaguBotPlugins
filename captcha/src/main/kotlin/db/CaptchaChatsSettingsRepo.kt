@@ -38,7 +38,7 @@ class CaptchaChatsSettingsRepo(
     private val enabledColumn = bool("enabled").default(true)
     private val kickOnUnsuccessColumn = bool("kick").default(true)
     private val casColumn = bool("cas").default(true)
-    private val sendInPrivateColumn = bool("send_in_private").default(false)
+    private val reactOnJoinRequestColumn = bool("react_on_join_request").default(false)
 
     override val primaryKey = PrimaryKey(chatIdColumn)
 
@@ -66,7 +66,7 @@ class CaptchaChatsSettingsRepo(
         it[enabledColumn] = value.enabled
         it[kickOnUnsuccessColumn] = value.kickOnUnsuccess
         it[casColumn] = value.casEnabled
-        it[sendInPrivateColumn] = value.sendCaptchaInPrivate
+        it[reactOnJoinRequestColumn] = value.reactOnJoinRequest
     }
 
     override fun InsertStatement<Number>.asObject(value: ChatSettings): ChatSettings = ChatSettings(
@@ -77,7 +77,7 @@ class CaptchaChatsSettingsRepo(
         enabled = get(enabledColumn),
         kickOnUnsuccess = get(kickOnUnsuccessColumn),
         casEnabled = get(casColumn),
-        sendCaptchaInPrivate = get(sendInPrivateColumn)
+        reactOnJoinRequest = get(reactOnJoinRequestColumn)
     )
 
     override val selectById: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = { chatIdColumn.eq(it.chatId) }
@@ -90,7 +90,7 @@ class CaptchaChatsSettingsRepo(
             enabled = get(enabledColumn),
             kickOnUnsuccess = get(kickOnUnsuccessColumn),
             casEnabled = get(casColumn),
-            sendCaptchaInPrivate = get(sendInPrivateColumn)
+            reactOnJoinRequest = get(reactOnJoinRequestColumn)
         )
 
     init {

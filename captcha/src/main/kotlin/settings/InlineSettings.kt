@@ -122,6 +122,16 @@ class InlineSettings(
                     row {
                         dataButton("${successfulSymbol}Enabled", disableData)
                     }
+                    row {
+                        dataButton(
+                            "${if (chatSettings.reactOnJoinRequest) successfulSymbol else unsuccessfulSymbol}Join requests mode",
+                            if (chatSettings.reactOnJoinRequest) {
+                                disableReactOnJoinRequestData
+                            } else {
+                                enableReactOnJoinRequestData
+                            }
+                        )
+                    }
                     listOf(
                         CallbackDataInlineKeyboardButton(
                             "${if (chatSettings.autoRemoveEvents) successfulSymbol else unsuccessfulSymbol}Remove events",
@@ -153,14 +163,6 @@ class InlineSettings(
                                 disableCASData
                             } else {
                                 enableCASData
-                            }
-                        ),
-                        CallbackDataInlineKeyboardButton(
-                            "${if (chatSettings.sendCaptchaInPrivate) successfulSymbol else unsuccessfulSymbol}Send in private",
-                            if (chatSettings.sendCaptchaInPrivate) {
-                                disableSendInPrivateData
-                            } else {
-                                enableSendInPrivateData
                             }
                         ),
                         CallbackDataInlineKeyboardButton(
@@ -364,11 +366,11 @@ class InlineSettings(
             copy(casEnabled = false)
         }
 
-        defaultListener(enableSendInPrivateData) {
-            copy(sendCaptchaInPrivate = true)
+        defaultListener(enableReactOnJoinRequestData) {
+            copy(reactOnJoinRequest = true)
         }
-        defaultListener(disableSendInPrivateData) {
-            copy(sendCaptchaInPrivate = false)
+        defaultListener(disableReactOnJoinRequestData) {
+            copy(reactOnJoinRequest = false)
         }
 
         defaultListener(
@@ -521,8 +523,8 @@ class InlineSettings(
         private const val enableCASData = "${captchaEnablePrefix}_cas"
         private const val disableCASData = "${captchaDisablePrefix}_cas"
 
-        private const val enableSendInPrivateData = "${captchaEnablePrefix}_private_chat"
-        private const val disableSendInPrivateData = "${captchaDisablePrefix}_private_chat"
+        private const val enableReactOnJoinRequestData = "${captchaEnablePrefix}_react_join_requests"
+        private const val disableReactOnJoinRequestData = "${captchaDisablePrefix}_react_join_requests"
 
         private const val providersPrefix = "${captchaPrefix}_p"
         private const val providerSettingsData = "${providersPrefix}_sp"
