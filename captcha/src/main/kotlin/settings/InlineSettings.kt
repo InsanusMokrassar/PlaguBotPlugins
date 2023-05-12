@@ -119,11 +119,11 @@ class InlineSettings(
             replyMarkup = inlineKeyboard {
                 if (chatSettings.enabled) {
                     row {
-                        dataButton("Enabled$successfulSymbol", disableData)
+                        dataButton("${successfulSymbol}Enabled", disableData)
                     }
                     listOf(
                         CallbackDataInlineKeyboardButton(
-                            "Remove events${if (chatSettings.autoRemoveEvents) successfulSymbol else unsuccessfulSymbol}",
+                            "${if (chatSettings.autoRemoveEvents) successfulSymbol else unsuccessfulSymbol}Remove events",
                             if (chatSettings.autoRemoveEvents) {
                                 disableAutoRemoveEventsData
                             } else {
@@ -131,7 +131,7 @@ class InlineSettings(
                             }
                         ),
                         CallbackDataInlineKeyboardButton(
-                            "Remove commands${if (chatSettings.autoRemoveCommands) successfulSymbol else unsuccessfulSymbol}",
+                            "${if (chatSettings.autoRemoveCommands) successfulSymbol else unsuccessfulSymbol}Remove commands",
                             if (chatSettings.autoRemoveCommands) {
                                 disableAutoRemoveCommandsData
                             } else {
@@ -139,7 +139,7 @@ class InlineSettings(
                             }
                         ),
                         CallbackDataInlineKeyboardButton(
-                            "Kick${if (chatSettings.kickOnUnsuccess) successfulSymbol else unsuccessfulSymbol}",
+                            "${if (chatSettings.kickOnUnsuccess) successfulSymbol else unsuccessfulSymbol}Kick",
                             if (chatSettings.kickOnUnsuccess) {
                                 disableKickOnUnsuccessData
                             } else {
@@ -147,11 +147,19 @@ class InlineSettings(
                             }
                         ),
                         CallbackDataInlineKeyboardButton(
-                            "CAS${if (chatSettings.casEnabled) successfulSymbol else unsuccessfulSymbol}",
+                            "${if (chatSettings.casEnabled) successfulSymbol else unsuccessfulSymbol}CAS",
                             if (chatSettings.casEnabled) {
                                 disableCASData
                             } else {
                                 enableCASData
+                            }
+                        ),
+                        CallbackDataInlineKeyboardButton(
+                            "${if (chatSettings.casEnabled) successfulSymbol else unsuccessfulSymbol}Send in private",
+                            if (chatSettings.casEnabled) {
+                                disableSendInPrivateData
+                            } else {
+                                enableSendInPrivateData
                             }
                         ),
                         CallbackDataInlineKeyboardButton(
@@ -161,7 +169,7 @@ class InlineSettings(
                     ).chunked(2).forEach(::add)
                 } else {
                     row {
-                        dataButton("Enabled$unsuccessfulSymbol", enableData)
+                        dataButton("${unsuccessfulSymbol}Enabled", enableData)
                     }
                 }
                 drawerDataButtonRow(backDrawer, chatId)
@@ -353,6 +361,13 @@ class InlineSettings(
             copy(casEnabled = false)
         }
 
+        defaultListener(enableSendInPrivateData) {
+            copy(sendCaptchaInPrivate = true)
+        }
+        defaultListener(disableSendInPrivateData) {
+            copy(sendCaptchaInPrivate = false)
+        }
+
         defaultListener(
             useExpressionData,
             { settings, query ->
@@ -502,6 +517,9 @@ class InlineSettings(
 
         private const val enableCASData = "${captchaEnablePrefix}_cas"
         private const val disableCASData = "${captchaDisablePrefix}_cas"
+
+        private const val enableSendInPrivateData = "${captchaEnablePrefix}_private_chat"
+        private const val disableSendInPrivateData = "${captchaDisablePrefix}_private_chat"
 
         private const val providersPrefix = "${captchaPrefix}_p"
         private const val providerSettingsData = "${providersPrefix}_sp"

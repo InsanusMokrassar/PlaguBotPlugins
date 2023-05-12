@@ -69,7 +69,8 @@ sealed class CaptchaProvider {
         user: User,
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
-        kickOnUnsuccess: Boolean
+        kickOnUnsuccess: Boolean,
+        writeUsersDirectly: Boolean
     ): CaptchaProviderWorker
 
     suspend fun BehaviourContext.doAction(
@@ -78,7 +79,8 @@ sealed class CaptchaProvider {
         newUsers: List<User>,
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
-        kickOnUnsuccess: Boolean
+        kickOnUnsuccess: Boolean,
+        writeUsersDirectly: Boolean
     ) {
         val userBanDateTime = eventDateTime + checkTimeSpan
         newUsers.map { user ->
@@ -90,7 +92,8 @@ sealed class CaptchaProvider {
                         user,
                         leftRestrictionsPermissions,
                         adminsApi,
-                        kickOnUnsuccess
+                        kickOnUnsuccess,
+                        writeUsersDirectly
                     )
                     val deferred = async {
                         runCatchingSafely {
@@ -209,7 +212,8 @@ data class SlotMachineCaptchaProvider(
     private inner class Worker(
         private val chat: GroupChat,
         private val user: User,
-        private val adminsApi: AdminsCacheAPI?
+        private val adminsApi: AdminsCacheAPI?,
+        private val writeUserDirectly: Boolean
     ) : CaptchaProviderWorker {
         private val messagesToDelete = mutableListOf<Message>()
 
@@ -219,7 +223,7 @@ data class SlotMachineCaptchaProvider(
                 regular(", $captchaText")
             }
             val sentMessage = send(
-                chat
+                if (writeUserDirectly) user else chat,
             ) {
                 baseBuilder()
                 +": ✖✖✖"
@@ -287,8 +291,9 @@ data class SlotMachineCaptchaProvider(
         user: User,
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
-        kickOnUnsuccess: Boolean
-    ): CaptchaProviderWorker = Worker(chat, user, adminsApi)
+        kickOnUnsuccess: Boolean,
+        writeUsersDirectly: Boolean
+    ): CaptchaProviderWorker = Worker(chat, user, adminsApi, writeUsersDirectly)
 }
 
 @Serializable
@@ -303,13 +308,14 @@ data class SimpleCaptchaProvider(
     private inner class Worker(
         private val chat: GroupChat,
         private val user: User,
-        private val adminsApi: AdminsCacheAPI?
+        private val adminsApi: AdminsCacheAPI?,
+        private val writeUserDirectly: Boolean
     ) : CaptchaProviderWorker {
         private var sentMessage: Message? = null
         override suspend fun BehaviourContext.doCaptcha(): Boolean {
             val callbackData = uuid4().toString()
             val sentMessage = send(
-                chat,
+                if (writeUserDirectly) user else chat,
                 replyMarkup = inlineKeyboard {
                     row {
                         dataButton(buttonText, callbackData)
@@ -368,8 +374,9 @@ data class SimpleCaptchaProvider(
         user: User,
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
-        kickOnUnsuccess: Boolean
-    ): CaptchaProviderWorker = Worker(chat, user, adminsApi)
+        kickOnUnsuccess: Boolean,
+        writeUsersDirectly: Boolean
+    ): CaptchaProviderWorker = Worker(chat, user, adminsApi, writeUsersDirectly)
 }
 
 private object ExpressionBuilder {
@@ -433,7 +440,8 @@ data class ExpressionCaptchaProvider(
     private inner class Worker(
         private val chat: GroupChat,
         private val user: User,
-        private val adminsApi: AdminsCacheAPI?
+        private val adminsApi: AdminsCacheAPI?,
+        private val writeUserDirectly: Boolean
     ) : CaptchaProviderWorker {
         private var sentMessage: Message? = null
         override suspend fun BehaviourContext.doCaptcha(): Boolean {
@@ -449,7 +457,7 @@ data class ExpressionCaptchaProvider(
                 orderedAnswers.add(correctAnswerPosition, callbackData.first)
             }.toList()
             val sentMessage = send(
-                chat,
+                if (writeUserDirectly) user else chat,
                 replyMarkup = inlineKeyboard {
                     answers.map {
                         CallbackDataInlineKeyboardButton(it.toString(), it.toString())
@@ -510,7 +518,8 @@ data class ExpressionCaptchaProvider(
         user: User,
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
-        kickOnUnsuccess: Boolean
-    ): CaptchaProviderWorker = Worker(chat, user, adminsApi)
+        kickOnUnsuccess: Boolean,
+        writeUsersDirectly: Boolean
+    ): CaptchaProviderWorker = Worker(chat, user, adminsApi, writeUsersDirectly)
 }
 

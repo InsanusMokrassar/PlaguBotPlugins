@@ -13,5 +13,6 @@ data class ChatSettings(
     val autoRemoveEvents: Boolean = true,
     val kickOnUnsuccess: Boolean = true,
     val enabled: Boolean = false,
-    val casEnabled: Boolean = false
+    val casEnabled: Boolean = false,
+    val sendCaptchaInPrivate: Boolean = false
 )
