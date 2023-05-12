@@ -13,6 +13,8 @@ import dev.inmo.micro_utils.coroutines.safelyWithoutExceptions
 import dev.inmo.plagubot.plugins.captcha.slotMachineReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.answers.answerCallbackQuery
+import dev.inmo.tgbotapi.extensions.api.chat.invite_links.approveChatJoinRequest
+import dev.inmo.tgbotapi.extensions.api.chat.invite_links.declineChatJoinRequest
 import dev.inmo.tgbotapi.extensions.api.chat.members.banChatMember
 import dev.inmo.tgbotapi.extensions.api.chat.members.restrictChatMember
 import dev.inmo.tgbotapi.extensions.api.delete
@@ -70,7 +72,7 @@ sealed class CaptchaProvider {
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
         kickOnUnsuccess: Boolean,
-        writeUsersDirectly: Boolean
+        reactOnJoinRequest: Boolean
     ): CaptchaProviderWorker
 
     suspend fun BehaviourContext.doAction(
@@ -80,7 +82,7 @@ sealed class CaptchaProvider {
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
         kickOnUnsuccess: Boolean,
-        writeUsersDirectly: Boolean
+        joinRequest: Boolean
     ) {
         val userBanDateTime = eventDateTime + checkTimeSpan
         newUsers.map { user ->
@@ -93,7 +95,7 @@ sealed class CaptchaProvider {
                         leftRestrictionsPermissions,
                         adminsApi,
                         kickOnUnsuccess,
-                        writeUsersDirectly
+                        joinRequest
                     )
                     val deferred = async {
                         runCatchingSafely {
@@ -125,20 +127,28 @@ sealed class CaptchaProvider {
 
                     when {
                         passed -> {
-                            safelyWithoutExceptions {
-                                restrictChatMember(
-                                    chat,
-                                    user,
-                                    permissions = leftRestrictionsPermissions
-                                )
+                            if (joinRequest) {
+                                safelyWithoutExceptions {
+                                    approveChatJoinRequest(chat, user)
+                                }
+                            } else {
+                                safelyWithoutExceptions {
+                                    restrictChatMember(
+                                        chat,
+                                        user,
+                                        permissions = leftRestrictionsPermissions
+                                    )
+                                }
                             }
                         }
                         else -> {
                             send(chat, " ") {
                                 +"User" + mention(user) + underline("didn't pass") + "captcha"
                             }
-                            if (kickOnUnsuccess) {
-                                banUser(chat, user, leftRestrictionsPermissions)
+
+                            when {
+                                joinRequest -> runCatchingSafely { declineChatJoinRequest(chat.id, user.id) }
+                                kickOnUnsuccess -> banChatMember(chat.id, user)
                             }
                         }
                     }
@@ -292,8 +302,8 @@ data class SlotMachineCaptchaProvider(
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
         kickOnUnsuccess: Boolean,
-        writeUsersDirectly: Boolean
-    ): CaptchaProviderWorker = Worker(chat, user, adminsApi, writeUsersDirectly)
+        reactOnJoinRequest: Boolean
+    ): CaptchaProviderWorker = Worker(chat, user, adminsApi, reactOnJoinRequest)
 }
 
 @Serializable
@@ -375,8 +385,8 @@ data class SimpleCaptchaProvider(
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
         kickOnUnsuccess: Boolean,
-        writeUsersDirectly: Boolean
-    ): CaptchaProviderWorker = Worker(chat, user, adminsApi, writeUsersDirectly)
+        reactOnJoinRequest: Boolean
+    ): CaptchaProviderWorker = Worker(chat, user, adminsApi, reactOnJoinRequest)
 }
 
 private object ExpressionBuilder {
@@ -441,7 +451,7 @@ data class ExpressionCaptchaProvider(
         private val chat: GroupChat,
         private val user: User,
         private val adminsApi: AdminsCacheAPI?,
-        private val writeUserDirectly: Boolean
+        private val reactOnJoinRequest: Boolean
     ) : CaptchaProviderWorker {
         private var sentMessage: Message? = null
         override suspend fun BehaviourContext.doCaptcha(): Boolean {
@@ -457,7 +467,7 @@ data class ExpressionCaptchaProvider(
                 orderedAnswers.add(correctAnswerPosition, callbackData.first)
             }.toList()
             val sentMessage = send(
-                if (writeUserDirectly) user else chat,
+                if (reactOnJoinRequest) user else chat,
                 replyMarkup = inlineKeyboard {
                     answers.map {
                         CallbackDataInlineKeyboardButton(it.toString(), it.toString())
@@ -519,7 +529,7 @@ data class ExpressionCaptchaProvider(
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
         kickOnUnsuccess: Boolean,
-        writeUsersDirectly: Boolean
-    ): CaptchaProviderWorker = Worker(chat, user, adminsApi, writeUsersDirectly)
+        reactOnJoinRequest: Boolean
+    ): CaptchaProviderWorker = Worker(chat, user, adminsApi, reactOnJoinRequest)
 }
 

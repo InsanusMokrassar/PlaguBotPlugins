@@ -1,6 +1,7 @@
 package dev.inmo.plagubot.plugins.captcha
 
 import com.benasher44.uuid.uuid4
+import com.soywiz.klock.DateTime
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.micro_utils.coroutines.safelyWithoutExceptions
@@ -18,25 +19,34 @@ import dev.inmo.plagubot.plugins.captcha.settings.InlineSettings
 import dev.inmo.plagubot.plugins.commands.BotCommandFullInfo
 import dev.inmo.plagubot.plugins.commands.CommandsKeeperKey
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
+import dev.inmo.tgbotapi.extensions.api.chat.invite_links.declineChatJoinRequest
 import dev.inmo.tgbotapi.extensions.api.chat.members.banChatMember
 import dev.inmo.tgbotapi.extensions.api.chat.members.restrictChatMember
 import dev.inmo.tgbotapi.extensions.api.delete
 import dev.inmo.tgbotapi.extensions.api.deleteMessage
 import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatJoinRequest
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onNewChatMembers
 import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithParams
+import dev.inmo.tgbotapi.extensions.utils.groupChatOrNull
 import dev.inmo.tgbotapi.extensions.utils.groupChatOrThrow
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.libraries.cache.admins.doAfterVerification
 import dev.inmo.tgbotapi.types.BotCommand
+import dev.inmo.tgbotapi.types.UserId
 import dev.inmo.tgbotapi.types.chat.Chat
 import dev.inmo.tgbotapi.types.chat.GroupChat
 import dev.inmo.tgbotapi.types.chat.LeftRestrictionsChatPermissions
+import dev.inmo.tgbotapi.types.chat.PublicChat
 import dev.inmo.tgbotapi.types.chat.RestrictionsChatPermissions
+import dev.inmo.tgbotapi.types.chat.User
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
+import dev.inmo.tgbotapi.types.message.abstracts.Message
+import dev.inmo.tgbotapi.utils.buildEntities
 import dev.inmo.tgbotapi.utils.link
 import dev.inmo.tgbotapi.utils.mention
 import io.ktor.client.HttpClient
@@ -174,40 +184,48 @@ class CaptchaBotPlugin : Plugin {
 
         suspend fun Chat.settings() = repo.getById(id) ?: repo.create(ChatSettings(id)).first()
 
-        onNewChatMembers(
-            initialFilter = {
-                it.chat is GroupChat
-            }
-        ) { msg ->
-            val settings = msg.chat.settings()
-            if (!settings.enabled) return@onNewChatMembers
+        suspend fun doCaptcha(
+            msg: Message?,
+            chat: GroupChat,
+            users: List<User>,
+            joinRequest: Boolean
+        ) {
+            val settings = chat.settings()
+            if (!settings.enabled) return
 
             safelyWithoutExceptions {
-                if (settings.autoRemoveEvents) {
+                if (settings.autoRemoveEvents && msg != null) {
                     deleteMessage(msg)
                 }
             }
-            val chat = msg.chat.groupChatOrThrow()
-            var newUsers = msg.chatEvent.members
-            newUsers.forEach { user ->
-                restrictChatMember(
-                    chat,
-                    user,
-                    permissions = RestrictionsChatPermissions
-                )
+            var newUsers = users
+
+            if (!joinRequest) {
+                newUsers.forEach { user ->
+                    restrictChatMember(
+                        chat,
+                        user,
+                        permissions = RestrictionsChatPermissions
+                    )
+                }
             }
+
             newUsers = if (settings.casEnabled) {
                 newUsers.filterNot { user ->
                     casChecker.isBanned(user.id).also { isBanned ->
                         runCatchingSafely {
                             if (isBanned) {
-                                reply(
-                                    msg
-                                ) {
+                                val entities = buildEntities {
                                     +"User " + mention(user) + " is banned in " + link("CAS System", "https://cas.chat/query?u=${user.id.chatId}")
                                 }
-                                if (settings.kickOnUnsuccess) {
-                                    banChatMember(msg.chat.id, user)
+
+                                msg ?.let {
+                                    reply(it, entities)
+                                } ?: send(chat, entities)
+
+                                when {
+                                    joinRequest -> runCatchingSafely { declineChatJoinRequest(chat.id, user.id) }
+                                    settings.kickOnUnsuccess -> banChatMember(chat.id, user)
                                 }
                             }
                         }
@@ -219,7 +237,38 @@ class CaptchaBotPlugin : Plugin {
             val defaultChatPermissions = LeftRestrictionsChatPermissions
 
             with (settings.captchaProvider) {
-                doAction(msg.date, chat, newUsers, defaultChatPermissions, adminsAPI, settings.kickOnUnsuccess, settings.sendCaptchaInPrivate)
+                doAction(msg ?.date ?: DateTime.now(), chat, newUsers, defaultChatPermissions, adminsAPI, settings.kickOnUnsuccess, joinRequest)
+            }
+        }
+
+        onChatJoinRequest(
+            initialFilter = {
+                it.chat is GroupChat
+            }
+        ) { msg ->
+            val settings = msg.chat.settings()
+            if (settings.reactOnJoinRequest) {
+                doCaptcha(
+                    msg = null,
+                    chat = msg.chat.groupChatOrNull() ?: return@onChatJoinRequest,
+                    users = listOf(msg.user),
+                    joinRequest = true
+                )
+            }
+        }
+        onNewChatMembers(
+            initialFilter = {
+                it.chat is GroupChat
+            }
+        ) { msg ->
+            val settings = msg.chat.settings()
+            if (!settings.reactOnJoinRequest) {
+                doCaptcha(
+                    msg = msg,
+                    chat = msg.chat.groupChatOrNull() ?: return@onNewChatMembers,
+                    users = msg.chatEvent.members,
+                    joinRequest = false
+                )
             }
         }
 

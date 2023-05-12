@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.4
+
+* `Captcha`:
+  * Hotfixes
+
 ## 0.11.3
 
 * `Captcha`:
