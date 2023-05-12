@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.3
+
+* `Captcha`:
+  * Add support of sending messages directly to the user private
+
 ## 0.11.2
 
 * `Versions`:

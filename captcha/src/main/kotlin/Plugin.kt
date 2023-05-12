@@ -219,7 +219,7 @@ class CaptchaBotPlugin : Plugin {
             val defaultChatPermissions = LeftRestrictionsChatPermissions
 
             with (settings.captchaProvider) {
-                doAction(msg.date, chat, newUsers, defaultChatPermissions, adminsAPI, settings.kickOnUnsuccess)
+                doAction(msg.date, chat, newUsers, defaultChatPermissions, adminsAPI, settings.kickOnUnsuccess, settings.sendCaptchaInPrivate)
             }
         }
 
