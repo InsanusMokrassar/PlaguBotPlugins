@@ -504,32 +504,34 @@ data class ExpressionCaptchaProvider(
             }
 
             var leftAttempts = attempts
-            return waitMessageDataCallbackQuery().takeWhile { leftAttempts > 0 }.mapNotNull { query ->
-                val baseCheck = query.message.messageId == sentMessage.messageId
-                val dataCorrect = (query.user.id == user.id && query.data == correctAnswer)
-                val adminCanceled = (query.data == cancelData && (adminsApi?.isAdmin(
-                    sentMessage.chat.id,
-                    query.user.id
-                )) == true)
-                baseCheck && if (dataCorrect || adminCanceled) {
-                    if (adminCanceled) {
+            return waitMessageDataCallbackQuery().filter {
+                it.message.sameMessage(sentMessage)
+            }.takeWhile { leftAttempts > 0 }.filter { query ->
+                when {
+                    adminsApi ?.isAdmin(sentMessage.chat.id, query.user.id) == true && query.data == cancelData -> {
                         sendAdminCanceledMessage(
                             sentMessage.chat,
                             user,
                             query.user
                         )
+                        true
                     }
-                    true
-                } else {
-                    leftAttempts--
-                    if (leftAttempts > 0) {
-                        answerCallbackQuery(query, leftRetriesText + leftAttempts)
-                        return@mapNotNull null
-                    } else {
+                    query.user.id != user.id -> {
+                        answer(query, "It is not for you :)")
+                        false
+                    }
+                    query.data == correctAnswer -> {
+                        true
+                    }
+                    else -> {
+                        leftAttempts--
+                        if (leftAttempts > 0) {
+                            answerCallbackQuery(query, leftRetriesText + leftAttempts)
+                        }
                         false
                     }
                 }
-            }.firstOrNull() ?: false
+            }.firstOrNull() != null
         }
 
         override suspend fun BehaviourContext.onCloseCaptcha(passed: Boolean?) {
