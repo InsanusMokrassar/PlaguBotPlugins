@@ -2,6 +2,9 @@
 
 ## 0.11.5
 
+* `Captcha`:
+  * ~~Hot~~fixes
+
 ## 0.11.4
 
 * `Captcha`:
