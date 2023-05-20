@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.6
+
+* `Versions`:
+  * `Serialization`: `1.5.1`
+  * `MicroUtils`: `0.18.4`
+  * `PlaguBot`: `5.1.3`
+  * `TelegramBotAPILibraries`: `0.11.3`
+
 ## 0.11.5
 
 * `Captcha`:
