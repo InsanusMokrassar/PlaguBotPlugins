@@ -5,7 +5,7 @@ kotlin-serialization = "1.5.1"
 
 plagubot = "6.0.0"
 kslog = "1.1.1"
-microutils = "0.19.0"
+microutils = "0.19.1"
 
 tgbotapi-libraries = "0.12.0"
 
