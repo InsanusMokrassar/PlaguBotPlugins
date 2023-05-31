@@ -3,7 +3,7 @@
 ## 0.12.0
 
 * `Versions`:
-  * `MicroUtils`: `0.19.0`
+  * `MicroUtils`: `0.19.1`
   * `PlaguBot`: `6.0.0`
   * `TelegramBotAPILibraries`: `0.12.0`
 
