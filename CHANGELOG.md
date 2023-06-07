@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.0
+
+* `Versions`:
+  * `MicroUtils`: `0.19.2`
+  * `PlaguBot`: `6.0.1`
+  * `TelegramBotAPILibraries`: `0.12.1`
+* `Captcha`:
+  * Add support of positive users (task [#31](https://github.com/InsanusMokrassar/PlaguBotPlugins/issues/31))
+
 ## 0.11.6
 
 * `Versions`:

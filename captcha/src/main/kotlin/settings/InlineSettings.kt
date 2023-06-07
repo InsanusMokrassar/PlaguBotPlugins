@@ -132,6 +132,16 @@ class InlineSettings(
                             }
                         )
                     }
+                    row {
+                        dataButton(
+                            "${if (chatSettings.autoPassKnown) successfulSymbol else unsuccessfulSymbol}Auto pass known users",
+                            if (chatSettings.autoPassKnown) {
+                                disableAutoPassKnownData
+                            } else {
+                                enableAutoPassKnownData
+                            }
+                        )
+                    }
                     listOf(
                         CallbackDataInlineKeyboardButton(
                             "${if (chatSettings.autoRemoveEvents) successfulSymbol else unsuccessfulSymbol}Remove events",
@@ -373,6 +383,13 @@ class InlineSettings(
             copy(reactOnJoinRequest = false)
         }
 
+        defaultListener(enableAutoPassKnownData) {
+            copy(autoPassKnown = true)
+        }
+        defaultListener(disableAutoPassKnownData) {
+            copy(autoPassKnown = false)
+        }
+
         defaultListener(
             useExpressionData,
             { settings, query ->
@@ -525,6 +542,9 @@ class InlineSettings(
 
         private const val enableReactOnJoinRequestData = "${captchaEnablePrefix}_react_join_requests"
         private const val disableReactOnJoinRequestData = "${captchaDisablePrefix}_react_join_requests"
+
+        private const val enableAutoPassKnownData = "${captchaEnablePrefix}_auto_pass_known"
+        private const val disableAutoPassKnownData = "${captchaDisablePrefix}_auto_pass_known"
 
         private const val providersPrefix = "${captchaPrefix}_p"
         private const val providerSettingsData = "${providersPrefix}_sp"
