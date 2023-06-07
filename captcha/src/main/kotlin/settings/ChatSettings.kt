@@ -14,5 +14,6 @@ data class ChatSettings(
     val kickOnUnsuccess: Boolean = true,
     val enabled: Boolean = false,
     val casEnabled: Boolean = false,
-    val reactOnJoinRequest: Boolean = false
+    val reactOnJoinRequest: Boolean = false,
+    val autoPassKnown: Boolean = false
 )

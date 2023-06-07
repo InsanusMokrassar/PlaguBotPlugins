@@ -1,7 +1,6 @@
 package dev.inmo.plagubot.plugins.captcha
 
 import com.benasher44.uuid.uuid4
-import com.soywiz.klock.DateTime
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.micro_utils.coroutines.safelyWithoutExceptions
@@ -11,6 +10,7 @@ import dev.inmo.plagubot.Plugin
 import dev.inmo.plagubot.plugins.captcha.cas.CASChecker
 import dev.inmo.plagubot.plugins.captcha.cas.KtorCASChecker
 import dev.inmo.plagubot.plugins.captcha.db.CaptchaChatsSettingsRepo
+import dev.inmo.plagubot.plugins.captcha.db.UsersPassInfoRepo
 import dev.inmo.plagubot.plugins.captcha.provider.ExpressionCaptchaProvider
 import dev.inmo.plagubot.plugins.captcha.provider.SimpleCaptchaProvider
 import dev.inmo.plagubot.plugins.captcha.provider.SlotMachineCaptchaProvider
@@ -19,6 +19,7 @@ import dev.inmo.plagubot.plugins.captcha.settings.InlineSettings
 import dev.inmo.plagubot.plugins.commands.BotCommandFullInfo
 import dev.inmo.plagubot.plugins.commands.CommandsKeeperKey
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
+import dev.inmo.tgbotapi.extensions.api.chat.invite_links.approveChatJoinRequest
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.declineChatJoinRequest
 import dev.inmo.tgbotapi.extensions.api.chat.members.banChatMember
 import dev.inmo.tgbotapi.extensions.api.chat.members.restrictChatMember
@@ -33,15 +34,12 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onComman
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onNewChatMembers
 import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithParams
 import dev.inmo.tgbotapi.extensions.utils.groupChatOrNull
-import dev.inmo.tgbotapi.extensions.utils.groupChatOrThrow
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.libraries.cache.admins.doAfterVerification
 import dev.inmo.tgbotapi.types.BotCommand
-import dev.inmo.tgbotapi.types.UserId
 import dev.inmo.tgbotapi.types.chat.Chat
 import dev.inmo.tgbotapi.types.chat.GroupChat
 import dev.inmo.tgbotapi.types.chat.LeftRestrictionsChatPermissions
-import dev.inmo.tgbotapi.types.chat.PublicChat
 import dev.inmo.tgbotapi.types.chat.RestrictionsChatPermissions
 import dev.inmo.tgbotapi.types.chat.User
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
@@ -50,6 +48,7 @@ import dev.inmo.tgbotapi.utils.buildEntities
 import dev.inmo.tgbotapi.utils.link
 import dev.inmo.tgbotapi.utils.mention
 import io.ktor.client.HttpClient
+import korlibs.time.DateTime
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -173,6 +172,10 @@ class CaptchaBotPlugin : Plugin {
             CASChecker::class
         )
 
+        single {
+            UsersPassInfoRepo(get())
+        }
+
         single { InlineSettings(get(), get(), get(), get()) }
         singleWithRandomQualifier<InlineButtonsDrawer> { get<InlineSettings>() }
     }
@@ -181,6 +184,7 @@ class CaptchaBotPlugin : Plugin {
         val repo: CaptchaChatsSettingsRepo by koin.inject()
         val adminsAPI = koin.getOrNull<AdminsCacheAPI>()
         val casChecker = koin.get<CASChecker>()
+        val usersPassInfoRepo = koin.get<UsersPassInfoRepo>()
 
         suspend fun Chat.settings() = repo.getById(id) ?: repo.create(ChatSettings(id)).first()
 
@@ -190,6 +194,7 @@ class CaptchaBotPlugin : Plugin {
             users: List<User>,
             joinRequest: Boolean
         ) {
+            val defaultChatPermissions = LeftRestrictionsChatPermissions
             val settings = chat.settings()
             if (!settings.enabled) return
 
@@ -234,10 +239,41 @@ class CaptchaBotPlugin : Plugin {
             } else {
                 newUsers
             }
-            val defaultChatPermissions = LeftRestrictionsChatPermissions
+
+            newUsers = if (settings.autoPassKnown) {
+                newUsers.filterNot { user ->
+                    usersPassInfoRepo.havePassedChats(user.id, settings.captchaProvider.complexity).also {
+                        runCatchingSafely {
+                            val entities = buildEntities {
+                                +"User " + mention(user) + " has passed captcha earlier. So, automatically passed"
+                            }
+
+                            msg ?.let {
+                                reply(it, entities)
+                            } ?: send(chat, entities)
+
+                            when {
+                                joinRequest -> runCatchingSafely { approveChatJoinRequest(chat.id, user.id) }
+                                else -> restrictChatMember(chat.id, user, permissions = defaultChatPermissions)
+                            }
+                        }
+                    }
+                }
+            } else {
+                newUsers
+            }
 
             with (settings.captchaProvider) {
-                doAction(msg ?.date ?: DateTime.now(), chat, newUsers, defaultChatPermissions, adminsAPI, settings.kickOnUnsuccess, joinRequest)
+                doAction(
+                    msg ?.date ?: DateTime.now(),
+                    chat,
+                    newUsers,
+                    defaultChatPermissions,
+                    adminsAPI,
+                    settings.kickOnUnsuccess,
+                    joinRequest,
+                    usersPassInfoRepo
+                )
             }
         }
 

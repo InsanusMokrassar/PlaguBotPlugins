@@ -1,15 +1,17 @@
 package dev.inmo.plagubot.plugins.captcha.provider
 
 import com.benasher44.uuid.uuid4
-import com.soywiz.klock.DateTime
-import com.soywiz.klock.TimeSpan
-import com.soywiz.klock.seconds
+import korlibs.time.DateTime
+import korlibs.time.TimeSpan
+import korlibs.time.seconds
 import dev.inmo.kslog.common.e
 import dev.inmo.kslog.common.logger
 import dev.inmo.micro_utils.coroutines.LinkedSupervisorScope
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.micro_utils.coroutines.safelyWithResult
 import dev.inmo.micro_utils.coroutines.safelyWithoutExceptions
+import dev.inmo.micro_utils.repos.add
+import dev.inmo.plagubot.plugins.captcha.db.UsersPassInfoRepo
 import dev.inmo.plagubot.plugins.captcha.slotMachineReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.answers.answerCallbackQuery
@@ -39,6 +41,7 @@ import dev.inmo.tgbotapi.types.chat.PublicChat
 import dev.inmo.tgbotapi.types.chat.User
 import dev.inmo.tgbotapi.types.dice.SlotMachineDiceAnimationType
 import dev.inmo.tgbotapi.types.message.abstracts.Message
+import dev.inmo.tgbotapi.types.toChatId
 import dev.inmo.tgbotapi.utils.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
@@ -46,7 +49,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.job
 import kotlinx.coroutines.joinAll
@@ -58,6 +60,7 @@ import kotlin.random.Random
 @Serializable
 sealed class CaptchaProvider {
     abstract val checkTimeSpan: TimeSpan
+    abstract val complexity: Complexity
 
     interface CaptchaProviderWorker {
         suspend fun BehaviourContext.doCaptcha(): Boolean?
@@ -82,7 +85,8 @@ sealed class CaptchaProvider {
         leftRestrictionsPermissions: ChatPermissions,
         adminsApi: AdminsCacheAPI?,
         kickOnUnsuccess: Boolean,
-        joinRequest: Boolean
+        joinRequest: Boolean,
+        usersPassInfoRepo: UsersPassInfoRepo
     ) {
         val userBanDateTime = eventDateTime + checkTimeSpan
         newUsers.map { user ->
@@ -132,6 +136,14 @@ sealed class CaptchaProvider {
                             }
                         }
                         passed -> {
+                            usersPassInfoRepo.add(
+                                user.id,
+                                UsersPassInfoRepo.PassInfo(
+                                    chat.id.toChatId(),
+                                    true,
+                                    complexity
+                                )
+                            )
                             if (joinRequest) {
                                 safelyWithoutExceptions {
                                     approveChatJoinRequest(chat, user)
@@ -147,6 +159,14 @@ sealed class CaptchaProvider {
                             }
                         }
                         else -> {
+                            usersPassInfoRepo.add(
+                                user.id,
+                                UsersPassInfoRepo.PassInfo(
+                                    chat.id.toChatId(),
+                                    false,
+                                    complexity
+                                )
+                            )
                             send(chat, " ") {
                                 +"User" + mention(user) + underline("didn't pass") + "captcha"
                             }
@@ -223,6 +243,8 @@ data class SlotMachineCaptchaProvider(
 ) : CaptchaProvider() {
     @Transient
     override val checkTimeSpan = checkTimeSeconds.seconds
+    override val complexity: Complexity
+        get() = Complexity.Medium
 
     private inner class Worker(
         private val chat: GroupChat,
@@ -323,6 +345,8 @@ data class SimpleCaptchaProvider(
 ) : CaptchaProvider() {
     @Transient
     override val checkTimeSpan = checkTimeSeconds.seconds
+    override val complexity: Complexity
+        get() = Complexity.Easy
 
     private inner class Worker(
         private val chat: GroupChat,
@@ -459,6 +483,14 @@ data class ExpressionCaptchaProvider(
 ) : CaptchaProvider() {
     @Transient
     override val checkTimeSpan = checkTimeSeconds.seconds
+    override val complexity: Complexity by lazy {
+        var base = Complexity.Easy.weight
+        val operationWeight = (Complexity.Medium.weight - Complexity.Easy.weight) / 3
+        val answerWeight = (Complexity.Medium.weight - Complexity.Easy.weight) / 3
+        base += operationWeight * operations.coerceIn(0, 6)
+        base += answerWeight * (answers - attempts).coerceIn(-3, 3)
+        Complexity.Custom(base)
+    }
 
     private inner class Worker(
         private val chat: GroupChat,
