@@ -243,18 +243,20 @@ class CaptchaBotPlugin : Plugin {
             newUsers = if (settings.autoPassKnown) {
                 newUsers.filterNot { user ->
                     usersPassInfoRepo.havePassedChats(user.id, settings.captchaProvider.complexity).also {
-                        runCatchingSafely {
-                            val entities = buildEntities {
-                                +"User " + mention(user) + " has passed captcha earlier. So, automatically passed"
-                            }
+                        if (it) {
+                            runCatchingSafely {
+                                val entities = buildEntities {
+                                    +"User " + mention(user) + " has passed captcha earlier. Captcha has been cancelled"
+                                }
 
-                            msg ?.let {
-                                reply(it, entities)
-                            } ?: send(chat, entities)
+                                msg ?.let {
+                                    reply(it, entities)
+                                } ?: send(chat, entities)
 
-                            when {
-                                joinRequest -> runCatchingSafely { approveChatJoinRequest(chat.id, user.id) }
-                                else -> restrictChatMember(chat.id, user, permissions = defaultChatPermissions)
+                                when {
+                                    joinRequest -> runCatchingSafely { approveChatJoinRequest(chat.id, user.id) }
+                                    else -> restrictChatMember(chat.id, user, permissions = defaultChatPermissions)
+                                }
                             }
                         }
                     }

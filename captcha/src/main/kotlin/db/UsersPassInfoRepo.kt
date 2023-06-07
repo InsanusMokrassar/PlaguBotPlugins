@@ -1,5 +1,6 @@
 package dev.inmo.plagubot.plugins.captcha.db
 
+import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.micro_utils.repos.exposed.onetomany.AbstractExposedKeyValuesRepo
 import dev.inmo.plagubot.plugins.captcha.provider.Complexity
 import dev.inmo.tgbotapi.types.ChatId
@@ -48,6 +49,10 @@ class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserI
             Complexity(get(complexityColumn))
         )
 
+    init {
+        initTable()
+    }
+
     override fun insert(k: UserId, v: PassInfo, it: InsertStatement<Number>) {
         it[userIdColumn] = k.chatId
         it[chatIdColumn] = v.chatId.chatId
@@ -72,6 +77,6 @@ class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserI
             minComplexity ?.let {
                 op.and(complexityColumn.greaterEq(minComplexity.weight))
             } ?: op
-        }.limit(1).count() > 0
+        }.limit(1).count() > 0L
     }
 }

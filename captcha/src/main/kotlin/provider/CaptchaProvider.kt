@@ -289,23 +289,25 @@ data class SlotMachineCaptchaProvider(
                     !it.message.sameMessage(sentDice) -> false
                     it.data == cancelData && adminsApi ?.isAdmin(chat.id, it.user.id) == true -> return@filter true
                     it.data == cancelData && adminsApi ?.isAdmin(chat.id, it.user.id) != true -> {
-                        answer(
-                            it,
-                            "This button is only for admins"
-                        )
+                        runCatchingSafely {
+                            answer(
+                                it,
+                                "This button is only for admins"
+                            )
+                        }
                         false
                     }
                     it.user.id != user.id -> {
-                        answer(it, "This button is not for you")
+                        runCatchingSafely { answer(it, "This button is not for you") }
                         false
                     }
                     it.data != leftToClick.first() -> {
-                        answer(it, "Nope")
+                        runCatchingSafely { answer(it, "Nope") }
                         false
                     }
                     else -> {
                         clicked.add(leftToClick.removeFirst())
-                        answer(it, "Ok, next one")
+                        runCatchingSafely { answer(it, "Ok, next one") }
                         edit(sentMessage) {
                             baseBuilder()
                             +": ${buildTemplate()}"
@@ -364,7 +366,7 @@ data class SimpleCaptchaProvider(
                         row {
                             dataButton(buttonText, callbackData)
                         }
-                        if (adminsApi != null) {
+                        if (adminsApi != null && !writeUserDirectly) {
                             row {
                                 dataButton("Cancel (Admins only)", cancelData)
                             }
@@ -383,26 +385,32 @@ data class SimpleCaptchaProvider(
                 when {
                     !it.message.sameMessage(sentMessage) -> false
                     it.data == callbackData && it.user.id == user.id -> true
-                    it.data == cancelData && (adminsApi ?.isAdmin(chat.id, it.user.id) == true) -> true
+                    !writeUserDirectly && it.data == cancelData && (adminsApi ?.isAdmin(chat.id, it.user.id) == true) -> true
                     it.data == callbackData -> {
-                        answer(it, "This button is not for you")
+                        runCatchingSafely {
+                            answer(it, "This button is not for you")
+                        }
                         false
                     }
                     it.data == cancelData -> {
-                        answer(it, "This button is for admins only")
+                        runCatchingSafely {
+                            answer(it, "This button is for admins only")
+                        }
                         false
                     }
                     else -> false
                 }
             }.first()
 
-            answer(
-                pushed,
-                when (pushed.data) {
-                    cancelData -> "You have cancelled captcha"
-                    else -> "Ok, thanks"
-                }
-            )
+            runCatchingSafely {
+                answer(
+                    pushed,
+                    when (pushed.data) {
+                        cancelData -> "You have cancelled captcha"
+                        else -> "Ok, thanks"
+                    }
+                )
+            }
 
             return true
         }
@@ -484,7 +492,7 @@ data class ExpressionCaptchaProvider(
     @Transient
     override val checkTimeSpan = checkTimeSeconds.seconds
     override val complexity: Complexity by lazy {
-        var base = Complexity.Easy.weight
+        var base = Complexity.Medium.weight
         val operationWeight = (Complexity.Medium.weight - Complexity.Easy.weight) / 3
         val answerWeight = (Complexity.Medium.weight - Complexity.Easy.weight) / 3
         base += operationWeight * operations.coerceIn(0, 6)
@@ -518,7 +526,7 @@ data class ExpressionCaptchaProvider(
                         answers.map {
                             CallbackDataInlineKeyboardButton(it.toString(), it.toString())
                         }.chunked(3).forEach(::add)
-                        if (adminsApi != null) {
+                        if (adminsApi != null && !reactOnJoinRequest) {
                             row {
                                 dataButton("Cancel (Admins only)", cancelData)
                             }
@@ -540,7 +548,7 @@ data class ExpressionCaptchaProvider(
                 it.message.sameMessage(sentMessage)
             }.takeWhile { leftAttempts > 0 }.filter { query ->
                 when {
-                    adminsApi ?.isAdmin(sentMessage.chat.id, query.user.id) == true && query.data == cancelData -> {
+                    !reactOnJoinRequest && adminsApi ?.isAdmin(sentMessage.chat.id, query.user.id) == true && query.data == cancelData -> {
                         sendAdminCanceledMessage(
                             sentMessage.chat,
                             user,
@@ -549,7 +557,9 @@ data class ExpressionCaptchaProvider(
                         true
                     }
                     query.user.id != user.id -> {
-                        answer(query, "It is not for you :)")
+                        runCatchingSafely {
+                            answer(query, "It is not for you :)")
+                        }
                         false
                     }
                     query.data == correctAnswer -> {
@@ -558,7 +568,9 @@ data class ExpressionCaptchaProvider(
                     else -> {
                         leftAttempts--
                         if (leftAttempts > 0) {
-                            answerCallbackQuery(query, leftRetriesText + leftAttempts)
+                            runCatchingSafely {
+                                answer(query, leftRetriesText + leftAttempts)
+                            }
                         }
                         false
                     }
