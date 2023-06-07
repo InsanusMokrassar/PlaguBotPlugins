@@ -3,9 +3,10 @@
 ## 0.12.0
 
 * `Versions`:
-  * `MicroUtils`: `0.19.1`
-  * `PlaguBot`: `6.0.0`
-  * `TelegramBotAPILibraries`: `0.12.0`
+  * `MicroUtils`: `0.19.2`
+  * `PlaguBot`: `6.0.1`
+  * `TelegramBotAPILibraries`: `0.12.1`
+>>>>>>> update dependnecies
 
 ## 0.11.6
 
