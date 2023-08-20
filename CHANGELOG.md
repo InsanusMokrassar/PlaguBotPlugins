@@ -2,6 +2,12 @@
 
 ## 0.14.0
 
+* `Versions`:
+  * `MicroUtils`: `0.19.9`
+  * `PlaguBot`: `7.1.0`
+  * `TelegramBotAPILibraries`: `0.14.0`
+  * `KSLog`: `1.1.2`
+
 ## 0.13.0
 
 * `Versions`:
