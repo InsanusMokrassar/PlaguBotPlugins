@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.1
+
+* `Versions`:
+  * `PlaguBot`: `7.2.1`
+  * `TelegramBotAPILibraries`: `0.15.1`
+
 ## 0.15.0
 
 * `Versions`:
