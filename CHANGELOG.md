@@ -2,6 +2,14 @@
 
 ## 0.17.0
 
+* `Versions`:
+  * `Kotlin`: `1.9.21`
+  * `Serialization`: `1.6.1`
+  * `KSLog`: `1.3.1`
+  * `MicroUtils`: `0.20.15`
+  * `PlaguBot`: `7.4.0`
+  * `TelegramBotAPILibraries`: `0.17.0`
+
 ## 0.16.0
 
 * `Versions`:
