@@ -32,6 +32,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatJoinRequest
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onNewChatMembers
+import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithArgs
 import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithParams
 import dev.inmo.tgbotapi.extensions.utils.groupChatOrNull
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
@@ -317,7 +318,7 @@ class CaptchaBotPlugin : Plugin {
                     if (settings.autoRemoveCommands) {
                         safelyWithoutExceptions { deleteMessage(it) }
                     }
-                    val commands = it.parseCommandsWithParams()
+                    val commands = it.parseCommandsWithArgs()
                     val changeCommand = commands.keys.first {
                         println(it)
                         changeCaptchaMethodCommandRegex.matches(it)
