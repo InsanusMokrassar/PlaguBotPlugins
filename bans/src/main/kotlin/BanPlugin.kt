@@ -40,11 +40,7 @@ import dev.inmo.tgbotapi.types.chat.ChannelChat
 import dev.inmo.tgbotapi.types.chat.User
 import dev.inmo.tgbotapi.types.chat.member.AdministratorChatMember
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
-import dev.inmo.tgbotapi.types.message.abstracts.AnonymousGroupContentMessage
-import dev.inmo.tgbotapi.types.message.abstracts.CommonGroupContentMessage
-import dev.inmo.tgbotapi.types.message.abstracts.GroupContentMessage
-import dev.inmo.tgbotapi.types.message.abstracts.Message
-import dev.inmo.tgbotapi.types.message.abstracts.UnconnectedFromChannelGroupContentMessage
+import dev.inmo.tgbotapi.types.message.abstracts.*
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
 import dev.inmo.tgbotapi.types.message.textsources.bold
@@ -147,7 +143,7 @@ class BanPlugin : Plugin {
         val chatsSettings = koin.get<ChatsSettingsTable>(named("chatsSettingsTable"))
         val adminsApi = koin.get<AdminsCacheAPI>()
 
-        suspend fun sayUserHisWarnings(message: Message, userInReply: Either<User, ChannelChat>, settings: ChatSettings, warnings: Long) {
+        suspend fun sayUserHisWarnings(message: AccessibleMessage, userInReply: Either<User, ChannelChat>, settings: ChatSettings, warnings: Long) {
             reply(
                 message
             ) {
@@ -162,7 +158,7 @@ class BanPlugin : Plugin {
             }
         }
         suspend fun BehaviourContext.getChatSettings(
-            fromMessage: Message,
+            fromMessage: AccessibleMessage,
             sentByAdmin: Boolean
         ): ChatSettings? {
             val chatSettings = chatsSettings.get(fromMessage.chat.id) ?: ChatSettings()

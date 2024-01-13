@@ -1,6 +1,6 @@
 package dev.inmo.plagubot.plugins.commands
 
-import dev.inmo.micro_utils.language_codes.IetfLanguageCode
+import dev.inmo.micro_utils.language_codes.IetfLang
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
 import kotlinx.serialization.Serializable
 
@@ -19,11 +19,11 @@ value class CommandsKeeperKey(
         get() = key.first
     val languageCode: String?
         get() = key.second
-    val languageCodeIetf: IetfLanguageCode?
-        get() = languageCode ?.let(::IetfLanguageCode)
+    val languageCodeIetf: IetfLang?
+        get() = languageCode?.let(::IetfLang)
 
     constructor(scope: BotCommandScope = BotCommandScope.Default, languageCode: String? = null) : this(scope to languageCode)
-    constructor(scope: BotCommandScope, languageCode: IetfLanguageCode) : this(scope to languageCode.code)
+    constructor(scope: BotCommandScope, languageCode: IetfLang) : this(scope to languageCode.code)
 
     companion object {
         /**
