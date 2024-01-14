@@ -37,7 +37,7 @@ suspend fun BehaviourContext.enableSettings(koin: Koin, plugin: InlineButtonsPlu
                     ) {
                         me.username ?.let {
                             +"Looks like you didn't started the bot. Please, "
-                            link("start", makeUsernameLink(it.usernameWithoutAt))
+                            link("start", makeUsernameLink(it.withoutAt))
                             +" bot and try again"
                         } ?: let {
                             +"Looks like you didn't started the bot. Please, start dialog with me and try again"

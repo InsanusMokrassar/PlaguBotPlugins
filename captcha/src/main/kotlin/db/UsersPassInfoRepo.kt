@@ -61,7 +61,7 @@ class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserI
     }
 
     fun getPassedChats(userId: UserId, minComplexity: Complexity? = null): List<ChatId> = transaction(database) {
-        select {
+        selectAll().where {
             val op = selectById(userId).and(passedColumn.eq(true))
 
             minComplexity ?.let {
@@ -71,7 +71,7 @@ class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserI
     }
 
     fun havePassedChats(userId: UserId, minComplexity: Complexity? = null): Boolean = transaction(database) {
-        select {
+        selectAll().where {
             val op = selectById(userId).and(passedColumn.eq(true))
 
             minComplexity ?.let {

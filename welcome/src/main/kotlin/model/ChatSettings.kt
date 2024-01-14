@@ -7,6 +7,7 @@ import dev.inmo.tgbotapi.extensions.api.forwardMessage
 import dev.inmo.tgbotapi.extensions.api.send.copyMessage
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MessageIdentifier
+import dev.inmo.tgbotapi.types.ReplyParameters
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -26,8 +27,7 @@ internal suspend fun ChatSettings.sendWelcome(
         targetChatId,
         sourceChatId,
         sourceMessageId,
-        replyToMessageId = replyTo,
-        allowSendingWithoutReply = true
+        replyParameters = replyTo ?.let { ReplyParameters(targetChatId, it, allowSendingWithoutReply = true) },
     )
 }.onFailure {
     recacheChatId ?.let {
@@ -41,8 +41,7 @@ internal suspend fun ChatSettings.sendWelcome(
                 bot.copyMessage(
                     targetChatId,
                     forwarded,
-                    replyToMessageId = replyTo,
-                    allowSendingWithoutReply = true
+                    replyParameters = replyTo ?.let { ReplyParameters(targetChatId, it, allowSendingWithoutReply = true) },
                 )
             }.getOrNull()
         }

@@ -32,6 +32,7 @@ import dev.inmo.tgbotapi.extensions.utils.extensions.sameMessage
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
+import dev.inmo.tgbotapi.types.ReplyParameters
 import dev.inmo.tgbotapi.types.Seconds
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import dev.inmo.tgbotapi.types.chat.Chat
@@ -40,9 +41,11 @@ import dev.inmo.tgbotapi.types.chat.GroupChat
 import dev.inmo.tgbotapi.types.chat.PublicChat
 import dev.inmo.tgbotapi.types.chat.User
 import dev.inmo.tgbotapi.types.dice.SlotMachineDiceAnimationType
+import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
 import dev.inmo.tgbotapi.types.message.abstracts.Message
 import dev.inmo.tgbotapi.types.toChatId
 import dev.inmo.tgbotapi.utils.*
+import korlibs.time.millisecondsLong
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -252,7 +255,7 @@ data class SlotMachineCaptchaProvider(
         private val adminsApi: AdminsCacheAPI?,
         private val writeUserDirectly: Boolean
     ) : CaptchaProviderWorker {
-        private val messagesToDelete = mutableListOf<Message>()
+        private val messagesToDelete = mutableListOf<AccessibleMessage>()
 
         override suspend fun BehaviourContext.doCaptcha(): Boolean? {
             val baseBuilder: EntitiesBuilderBody = {
@@ -272,7 +275,7 @@ data class SlotMachineCaptchaProvider(
             val sentDice = sendDice(
                 sentMessage.chat,
                 SlotMachineDiceAnimationType,
-                replyToMessageId = sentMessage.messageId,
+                replyParameters = ReplyParameters(sentMessage),
                 replyMarkup = slotMachineReplyMarkup(adminsApi != null)
             ).also { messagesToDelete.add(it) }
             val reels = sentDice.content.dice.calculateSlotMachineResult()!!
@@ -321,8 +324,12 @@ data class SlotMachineCaptchaProvider(
         }
 
         override suspend fun BehaviourContext.onCloseCaptcha(passed: Boolean?) {
-            while (messagesToDelete.isNotEmpty()) {
-                runCatchingSafely { delete(messagesToDelete.removeFirst()) }
+            runCatching {
+                delete(messagesToDelete)
+            }.onFailure {
+                while (messagesToDelete.isNotEmpty()) {
+                    runCatchingSafely { delete(messagesToDelete.removeFirst()) }
+                }
             }
         }
 
@@ -356,7 +363,7 @@ data class SimpleCaptchaProvider(
         private val adminsApi: AdminsCacheAPI?,
         private val writeUserDirectly: Boolean
     ) : CaptchaProviderWorker {
-        private var sentMessage: Message? = null
+        private var sentMessage: AccessibleMessage? = null
         override suspend fun BehaviourContext.doCaptcha(): Boolean? {
             val callbackData = uuid4().toString()
             val sentMessage = runCatchingSafely {
@@ -506,7 +513,7 @@ data class ExpressionCaptchaProvider(
         private val adminsApi: AdminsCacheAPI?,
         private val reactOnJoinRequest: Boolean
     ) : CaptchaProviderWorker {
-        private var sentMessage: Message? = null
+        private var sentMessage: AccessibleMessage? = null
         override suspend fun BehaviourContext.doCaptcha(): Boolean? {
             val callbackData = ExpressionBuilder.createExpression(
                 maxPerNumber,

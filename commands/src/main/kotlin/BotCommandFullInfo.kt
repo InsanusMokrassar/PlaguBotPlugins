@@ -1,6 +1,6 @@
 package dev.inmo.plagubot.plugins.commands
 
-import dev.inmo.micro_utils.language_codes.IetfLanguageCode
+import dev.inmo.micro_utils.language_codes.IetfLang
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
 import kotlinx.serialization.Serializable
@@ -31,7 +31,7 @@ fun BotCommand.full(
 ) = full(CommandsKeeperKey(languageCode = languageCode))
 
 fun BotCommand.full(
-    languageCode: IetfLanguageCode
+    languageCode: IetfLang
 ) = full(CommandsKeeperKey(BotCommandScope.Default, languageCode = languageCode))
 
 fun BotCommand.full(
@@ -41,5 +41,5 @@ fun BotCommand.full(
 
 fun BotCommand.full(
     scope: BotCommandScope,
-    languageCode: IetfLanguageCode
+    languageCode: IetfLang
 ) = full(CommandsKeeperKey(scope, languageCode))

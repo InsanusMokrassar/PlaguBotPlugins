@@ -4,14 +4,9 @@ import dev.inmo.micro_utils.repos.exposed.ExposedRepo
 import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
 import dev.inmo.tgbotapi.types.IdChatIdentifier
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
 internal class WelcomeTable(
@@ -28,7 +23,7 @@ internal class WelcomeTable(
         initTable()
     }
 
-    private fun getInTransaction(chatId: IdChatIdentifier) = select {
+    private fun getInTransaction(chatId: IdChatIdentifier) = selectAll().where {
         targetChatIdColumn.eq(chatId.chatId).and(
             chatId.threadId ?.let { targetThreadIdColumn.eq(it) } ?: targetThreadIdColumn.isNull()
         )

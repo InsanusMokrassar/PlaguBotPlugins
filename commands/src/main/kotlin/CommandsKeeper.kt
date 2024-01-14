@@ -1,6 +1,6 @@
 package dev.inmo.plagubot.plugins.commands
 
-import dev.inmo.micro_utils.language_codes.IetfLanguageCode
+import dev.inmo.micro_utils.language_codes.IetfLang
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
 import dev.inmo.tgbotapi.types.commands.BotCommandScopeDefault
@@ -52,7 +52,7 @@ class CommandsKeeper(
     )
 
     suspend fun addCommand(
-        languageCode: IetfLanguageCode,
+        languageCode: IetfLang,
         command: BotCommand
     ) = addCommand(
         CommandsKeeperKey(BotCommandScopeDefault, languageCode),
@@ -61,7 +61,7 @@ class CommandsKeeper(
 
     suspend fun addCommand(
         scope: BotCommandScope,
-        languageCode: IetfLanguageCode,
+        languageCode: IetfLang,
         command: BotCommand
     ) = addCommand(
         CommandsKeeperKey(scope, languageCode),
@@ -111,7 +111,7 @@ class CommandsKeeper(
     )
 
     suspend fun removeCommand(
-        languageCode: IetfLanguageCode,
+        languageCode: IetfLang,
         command: BotCommand
     ) = removeCommand(
         CommandsKeeperKey(BotCommandScopeDefault, languageCode),
@@ -120,7 +120,7 @@ class CommandsKeeper(
 
     suspend fun removeCommand(
         scope: BotCommandScope,
-        languageCode: IetfLanguageCode,
+        languageCode: IetfLang,
         command: BotCommand
     ) = removeCommand(
         CommandsKeeperKey(scope, languageCode),
