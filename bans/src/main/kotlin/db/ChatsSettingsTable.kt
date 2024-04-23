@@ -6,6 +6,8 @@ import dev.inmo.micro_utils.repos.exposed.keyvalue.AbstractExposedKeyValueRepo
 import dev.inmo.plagubot.plugins.bans.models.ChatSettings
 import dev.inmo.plagubot.plugins.bans.utils.banPluginSerialFormat
 import dev.inmo.tgbotapi.types.IdChatIdentifier
+import dev.inmo.tgbotapi.types.MessageThreadId
+import dev.inmo.tgbotapi.types.RawChatId
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ISqlExpressionBuilder
 import org.jetbrains.exposed.sql.Op
@@ -26,15 +28,15 @@ private class ExposedChatsSettingsTable(
     private val threadIdColumn = long("threadId").nullable().default(null)
     private val chatSettingsColumn = text("userId")
     override val selectById: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = {
-        keyColumn.eq(it.chatId).and(it.threadId ?.let { threadIdColumn.eq(it) } ?: threadIdColumn.isNull())
+        keyColumn.eq(it.chatId.long).and(it.threadId ?.long ?.let { threadIdColumn.eq(it) } ?: threadIdColumn.isNull())
     }
     override val selectByValue: ISqlExpressionBuilder.(ChatSettings) -> Op<Boolean> = {
         chatSettingsColumn.eq(banPluginSerialFormat.encodeToString(ChatSettings.serializer(), it))
     }
     override val ResultRow.asKey: IdChatIdentifier
         get() = IdChatIdentifier(
-            get(keyColumn),
-            get(threadIdColumn)
+            RawChatId(get(keyColumn)),
+            get(threadIdColumn) ?.let(::MessageThreadId)
         )
     override val ResultRow.asObject: ChatSettings
         get() = banPluginSerialFormat.decodeFromString(ChatSettings.serializer(), get(chatSettingsColumn))
@@ -48,8 +50,8 @@ private class ExposedChatsSettingsTable(
     }
 
     override fun insertKey(k: IdChatIdentifier, v: ChatSettings, it: InsertStatement<Number>) {
-        it[keyColumn] = k.chatId
-        it[threadIdColumn] = k.threadId
+        it[keyColumn] = k.chatId.long
+        it[threadIdColumn] = k.threadId ?.long
     }
 }
 

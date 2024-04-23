@@ -1,6 +1,7 @@
 package dev.inmo.plagubot.plugins.inline.queries.models
 
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
+import dev.inmo.tgbotapi.types.InlineQueryId
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,7 +14,7 @@ data class OfferTemplate(
         it.queryRegex.matches(query)
     } ?.createContent(query) ?.let { content ->
         InlineQueryResultArticle(
-            id,
+            InlineQueryId(id),
             title,
             content,
             description = description

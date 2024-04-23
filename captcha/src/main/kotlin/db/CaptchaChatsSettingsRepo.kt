@@ -6,6 +6,8 @@ import dev.inmo.plagubot.plugins.captcha.provider.CaptchaProvider
 import dev.inmo.plagubot.plugins.captcha.provider.SimpleCaptchaProvider
 import dev.inmo.plagubot.plugins.captcha.settings.ChatSettings
 import dev.inmo.tgbotapi.types.IdChatIdentifier
+import dev.inmo.tgbotapi.types.MessageThreadId
+import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.toChatId
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
@@ -44,19 +46,19 @@ class CaptchaChatsSettingsRepo(
     override val primaryKey = PrimaryKey(chatIdColumn)
 
     override val selectByIds: ISqlExpressionBuilder.(List<IdChatIdentifier>) -> Op<Boolean> = {
-        fun IdChatIdentifier.createEq() = chatIdColumn.eq(chatId).and(
-            threadId ?.let { threadIdColumn.eq(it) } ?: threadIdColumn.isNull()
+        fun IdChatIdentifier.createEq() = chatIdColumn.eq(chatId.long).and(
+            threadId ?.let { threadIdColumn.eq(it.long) } ?: threadIdColumn.isNull()
         )
         it.foldRight(Op.FALSE as Op<Boolean>) { input, acc ->
             acc.or(input.createEq())
         }
     }
     override val ResultRow.asId: IdChatIdentifier
-        get() = IdChatIdentifier(get(chatIdColumn), get(threadIdColumn))
+        get() = IdChatIdentifier(RawChatId(get(chatIdColumn)), get(threadIdColumn) ?.let(::MessageThreadId))
 
     override fun createAndInsertId(value: ChatSettings, it: InsertStatement<Number>): IdChatIdentifier {
-        it[chatIdColumn] = value.chatId.chatId
-        it[threadIdColumn] = value.chatId.threadId
+        it[chatIdColumn] = value.chatId.chatId.long
+        it[threadIdColumn] = value.chatId.threadId ?.long
         return value.chatId
     }
 
@@ -72,7 +74,7 @@ class CaptchaChatsSettingsRepo(
     }
 
     override fun InsertStatement<Number>.asObject(value: ChatSettings): ChatSettings = ChatSettings(
-        chatId = IdChatIdentifier(get(chatIdColumn), get(threadIdColumn)),
+        chatId = IdChatIdentifier(RawChatId(get(chatIdColumn)), get(threadIdColumn) ?.let(::MessageThreadId)),
         captchaProvider = captchaProviderSerialFormat.decodeFromString(CaptchaProvider.serializer(), get(captchaProviderColumn)),
         autoRemoveCommands = get(autoRemoveCommandsColumn),
         autoRemoveEvents = get(autoRemoveEventsColumn),
@@ -83,7 +85,7 @@ class CaptchaChatsSettingsRepo(
         autoPassKnown = get(autoPassKnownColumn),
     )
 
-    override val selectById: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = { chatIdColumn.eq(it.chatId) }
+    override val selectById: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = { chatIdColumn.eq(it.chatId.long) }
     override val ResultRow.asObject: ChatSettings
         get() = ChatSettings(
             chatId = asId,

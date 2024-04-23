@@ -6,7 +6,7 @@ import dev.inmo.tgbotapi.bot.exceptions.RequestException
 import dev.inmo.tgbotapi.extensions.api.forwardMessage
 import dev.inmo.tgbotapi.extensions.api.send.copyMessage
 import dev.inmo.tgbotapi.types.IdChatIdentifier
-import dev.inmo.tgbotapi.types.MessageIdentifier
+import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.ReplyParameters
 import kotlinx.serialization.Serializable
 
@@ -14,14 +14,14 @@ import kotlinx.serialization.Serializable
 internal data class ChatSettings(
     val targetChatId: IdChatIdentifier,
     val sourceChatId: IdChatIdentifier,
-    val sourceMessageId: MessageIdentifier
+    val sourceMessageId: MessageId
 )
 
 internal suspend fun ChatSettings.sendWelcome(
     bot: TelegramBot,
     recacheChatId: IdChatIdentifier?,
     targetChatId: IdChatIdentifier = this.targetChatId,
-    replyTo: MessageIdentifier? = null
+    replyTo: MessageId? = null
 ) = runCatchingSafely {
     bot.copyMessage(
         targetChatId,

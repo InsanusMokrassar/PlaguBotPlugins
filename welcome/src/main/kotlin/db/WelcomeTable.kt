@@ -4,6 +4,9 @@ import dev.inmo.micro_utils.repos.exposed.ExposedRepo
 import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
 import dev.inmo.tgbotapi.types.IdChatIdentifier
+import dev.inmo.tgbotapi.types.MessageId
+import dev.inmo.tgbotapi.types.MessageThreadId
+import dev.inmo.tgbotapi.types.RawChatId
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
@@ -24,20 +27,20 @@ internal class WelcomeTable(
     }
 
     private fun getInTransaction(chatId: IdChatIdentifier) = selectAll().where {
-        targetChatIdColumn.eq(chatId.chatId).and(
-            chatId.threadId ?.let { targetThreadIdColumn.eq(it) } ?: targetThreadIdColumn.isNull()
+        targetChatIdColumn.eq(chatId.chatId.long).and(
+            chatId.threadId ?.long ?.let { targetThreadIdColumn.eq(it) } ?: targetThreadIdColumn.isNull()
         )
     }.limit(1).firstOrNull() ?.let {
         ChatSettings(
             IdChatIdentifier(
-                it[targetChatIdColumn],
-                it[targetThreadIdColumn]
+                RawChatId(it[targetChatIdColumn]),
+                it[targetThreadIdColumn] ?.let(::MessageThreadId)
             ),
             IdChatIdentifier(
-                it[sourceChatIdColumn],
-                it[sourceThreadIdColumn]
+                RawChatId(it[sourceChatIdColumn]),
+                it[sourceThreadIdColumn] ?.let(::MessageThreadId)
             ),
-            it[sourceMessageIdColumn]
+            it[sourceMessageIdColumn].let(::MessageId)
         )
     }
 
@@ -46,19 +49,19 @@ internal class WelcomeTable(
     }
 
     fun set(chatSettings: ChatSettings): Boolean = transaction(database) {
-        deleteWhere { targetChatIdColumn.eq(chatSettings.targetChatId.chatId) }
+        deleteWhere { targetChatIdColumn.eq(chatSettings.targetChatId.chatId.long) }
         insert {
-            it[targetChatIdColumn] = chatSettings.targetChatId.chatId
-            it[targetThreadIdColumn] = chatSettings.targetChatId.threadId
-            it[sourceChatIdColumn] = chatSettings.sourceChatId.chatId
-            it[sourceThreadIdColumn] = chatSettings.sourceChatId.threadId
-            it[sourceMessageIdColumn] = chatSettings.sourceMessageId
+            it[targetChatIdColumn] = chatSettings.targetChatId.chatId.long
+            it[targetThreadIdColumn] = chatSettings.targetChatId.threadId ?.long
+            it[sourceChatIdColumn] = chatSettings.sourceChatId.chatId.long
+            it[sourceThreadIdColumn] = chatSettings.sourceChatId.threadId ?.long
+            it[sourceMessageIdColumn] = chatSettings.sourceMessageId.long
         }.insertedCount > 0
     }
 
     fun unset(chatId: IdChatIdentifier): ChatSettings? = transaction(database) {
         getInTransaction(chatId) ?.also {
-            deleteWhere { targetChatIdColumn.eq(chatId.chatId).and(chatId.threadId ?.let { targetThreadIdColumn.eq(it) } ?: targetThreadIdColumn.isNull()) }
+            deleteWhere { targetChatIdColumn.eq(chatId.chatId.long).and(chatId.threadId ?.long ?.let { targetThreadIdColumn.eq(it) } ?: targetThreadIdColumn.isNull()) }
         }
     }
 }
