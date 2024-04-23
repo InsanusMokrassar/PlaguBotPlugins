@@ -7,15 +7,16 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MessageThreadId
+import dev.inmo.tgbotapi.types.toChatId
 import dev.inmo.tgbotapi.utils.row
 
 fun extractChatIdAndDataAndThread(data: String): Triple<IdChatIdentifier, MessageThreadId, String>? {
     return runCatching {
         val (chatIdString, messageThreadId, valuableData) = data.split(" ")
-        val chatId = ChatId(chatIdString.toLong())
+        val chatId = chatIdString.toLong().toChatId()
         return Triple(
             chatId,
-            messageThreadId.toLongOrNull() ?: return@runCatching null,
+            messageThreadId.toLongOrNull() ?.let(::MessageThreadId) ?: return@runCatching null,
             valuableData
         )
     }.getOrNull()
@@ -24,7 +25,7 @@ fun extractChatIdAndDataAndThread(data: String): Triple<IdChatIdentifier, Messag
 fun extractChatIdAndData(data: String): Pair<IdChatIdentifier, String>? {
     return runCatching {
         val (chatIdString, valuableData) = data.split(" ")
-        val chatId = ChatId(chatIdString.toLong())
+        val chatId = chatIdString.toLong().toChatId()
         return chatId to valuableData
     }.getOrNull()
 }

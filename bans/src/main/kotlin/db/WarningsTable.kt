@@ -16,10 +16,12 @@ internal val Database.warningsTable: WarningsTable
         { text("chatToUser") },
         { long("messageId") },
         "BanPluginWarningsTable"
-    ).withMapper<Pair<IdChatIdentifier, IdChatIdentifier>, MessageIdentifier, String, Long>(
+    ).withMapper<Pair<IdChatIdentifier, IdChatIdentifier>, MessageId, String, Long>(
         keyToToFrom = { banPluginSerialFormat.decodeFromString(this) },
         keyFromToTo = { banPluginSerialFormat.encodeToString(this) },
-        valueToToFrom = { this },
-        valueFromToTo = { this }
+        valueToToFrom = { MessageId(this) },
+        valueFromToTo = { this.long }
     )
-internal typealias WarningsTable = KeyValuesRepo<Pair<@Serializable(FullChatIdentifierSerializer::class) IdChatIdentifier, @Serializable(FullChatIdentifierSerializer::class) IdChatIdentifier>, MessageIdentifier>
+internal typealias WarningsTable = KeyValuesRepo<Pair<@Serializable(FullChatIdentifierSerializer::class) IdChatIdentifier, @Serializable(
+    FullChatIdentifierSerializer::class
+) IdChatIdentifier>, MessageId>

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.18.3
+
+* `Versions`:
+  * `Kotlin`: `1.9.23`
+  * `Serialization`: `1.6.3`
+  * `MicroUtils`: `0.20.45`
+  * `PlaguBot`: `8.3.0`
+  * `TelegramBotAPILibraries`: `0.19.0`
+
 ## 0.18.2
 
 * `Versions`:

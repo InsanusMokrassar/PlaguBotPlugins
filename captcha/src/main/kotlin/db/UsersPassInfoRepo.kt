@@ -4,7 +4,9 @@ import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.micro_utils.repos.exposed.onetomany.AbstractExposedKeyValuesRepo
 import dev.inmo.plagubot.plugins.captcha.provider.Complexity
 import dev.inmo.tgbotapi.types.ChatId
+import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.UserId
+import dev.inmo.tgbotapi.types.toChatId
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
@@ -35,16 +37,16 @@ class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserI
     override val keyColumn: Column<Long>
         get() = userIdColumn
     override val selectById: ISqlExpressionBuilder.(UserId) -> Op<Boolean> = {
-        userIdColumn.eq(it.chatId)
+        userIdColumn.eq(it.chatId.long)
     }
     override val selectByValue: ISqlExpressionBuilder.(PassInfo) -> Op<Boolean> = {
-        chatIdColumn.eq(it.chatId.chatId).and(passedColumn.eq(it.passed))
+        chatIdColumn.eq(it.chatId.chatId.long).and(passedColumn.eq(it.passed))
     }
     override val ResultRow.asKey: UserId
-        get() = UserId(get(userIdColumn))
+        get() = UserId(RawChatId(get(userIdColumn)))
     override val ResultRow.asObject: PassInfo
         get() = PassInfo(
-            ChatId(get(chatIdColumn)),
+            ChatId(RawChatId(get(chatIdColumn))),
             get(passedColumn),
             Complexity(get(complexityColumn))
         )
@@ -54,8 +56,8 @@ class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserI
     }
 
     override fun insert(k: UserId, v: PassInfo, it: InsertStatement<Number>) {
-        it[userIdColumn] = k.chatId
-        it[chatIdColumn] = v.chatId.chatId
+        it[userIdColumn] = k.chatId.long
+        it[chatIdColumn] = v.chatId.chatId.long
         it[passedColumn] = v.passed
         it[complexityColumn] = v.complexity.weight
     }
@@ -67,7 +69,7 @@ class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserI
             minComplexity ?.let {
                 op.and(complexityColumn.greaterEq(minComplexity.weight))
             } ?: op
-        }.map { ChatId(it[chatIdColumn]) }
+        }.map { it[chatIdColumn].toChatId() }
     }
 
     fun havePassedChats(userId: UserId, minComplexity: Complexity? = null): Boolean = transaction(database) {

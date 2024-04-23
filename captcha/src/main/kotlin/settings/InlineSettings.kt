@@ -27,9 +27,7 @@ import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.ifChatId
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
-import dev.inmo.tgbotapi.types.IdChatIdentifier
-import dev.inmo.tgbotapi.types.MessageId
-import dev.inmo.tgbotapi.types.UserId
+import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
@@ -77,14 +75,14 @@ class InlineSettings(
             keyColumn.eq(stringFormat.encodeToString(pairSerializer, it))
         }
         override val selectByValue: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = {
-            chatIdColumn.eq(it.chatId).and(it.threadId ?.let { threadIdColumn.eq(it) } ?: threadIdColumn.isNull())
+            chatIdColumn.eq(it.chatId.long).and(it.threadId ?.long ?.let { threadIdColumn.eq(it) } ?: threadIdColumn.isNull())
         }
         override val ResultRow.asKey: Pair<UserId, MessageId>
             get() = stringFormat.decodeFromString(pairSerializer, get(keyColumn))
         override val ResultRow.asObject: IdChatIdentifier
             get() = IdChatIdentifier(
-                get(chatIdColumn),
-                get(threadIdColumn)
+                RawChatId(get(chatIdColumn)),
+                get(threadIdColumn) ?.let(::MessageThreadId)
             )
 
         init {
@@ -96,8 +94,8 @@ class InlineSettings(
             v: IdChatIdentifier,
             it: UpdateBuilder<Int>
         ) {
-            it[chatIdColumn] = v.chatId
-            it[threadIdColumn] = v.threadId
+            it[chatIdColumn] = v.chatId.long
+            it[threadIdColumn] = v.threadId ?.long
         }
 
         override fun insertKey(k: Pair<UserId, MessageId>, v: IdChatIdentifier, it: InsertStatement<Number>) {

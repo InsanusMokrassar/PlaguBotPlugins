@@ -25,7 +25,7 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.requests.send.SendTextMessage
 import dev.inmo.tgbotapi.types.IdChatIdentifier
-import dev.inmo.tgbotapi.types.MessageIdentifier
+import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.UserId
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
@@ -155,7 +155,7 @@ internal class BansInlineButtonsDrawer(
     override suspend fun BehaviourContext.drawInlineButtons(
         chatId: IdChatIdentifier,
         userId: UserId,
-        messageId: MessageIdentifier,
+        messageId: MessageId,
         key: String?
     ) {
         val settings = chatsSettings.get(chatId) ?: ChatSettings()
