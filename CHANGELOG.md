@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.19.0
+
+* `Versions`:
+  * `MicroUtils`: `0.21.1`
+  * `PlaguBot`: `8.4.0`
+  * `TelegramBotAPILibraries`: `0.20.0`
+  * `MicroUtils`: `0.21.1`
+
 ## 0.18.3
 
 * `Versions`:
