@@ -2,6 +2,12 @@
 
 ## 0.19.1
 
+* `Versions`:
+  * `MicroUtils`: `0.21.2`
+  * `PlaguBot`: `8.5.0`
+  * `TelegramBotAPILibraries`: `0.21.0`
+  * `MicroUtils`: `0.21.2`
+
 ## 0.19.0
 
 * `Versions`:
