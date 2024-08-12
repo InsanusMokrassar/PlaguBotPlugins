@@ -16,6 +16,7 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserId, UsersPassInfoRepo.PassInfo>(
@@ -55,7 +56,7 @@ class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserI
         initTable()
     }
 
-    override fun insert(k: UserId, v: PassInfo, it: InsertStatement<Number>) {
+    override fun insert(k: UserId, v: PassInfo, it: UpdateBuilder<Int>) {
         it[userIdColumn] = k.chatId.long
         it[chatIdColumn] = v.chatId.chatId.long
         it[passedColumn] = v.passed
