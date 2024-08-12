@@ -98,7 +98,7 @@ class InlineSettings(
             it[threadIdColumn] = v.threadId ?.long
         }
 
-        override fun insertKey(k: Pair<UserId, MessageId>, v: IdChatIdentifier, it: InsertStatement<Number>) {
+        override fun insertKey(k: Pair<UserId, MessageId>, v: IdChatIdentifier, it: UpdateBuilder<Int>) {
             it[keyColumn] = stringFormat.encodeToString(pairSerializer, k)
         }
 

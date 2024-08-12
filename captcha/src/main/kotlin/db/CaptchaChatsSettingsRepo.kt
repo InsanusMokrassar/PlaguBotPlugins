@@ -56,7 +56,7 @@ class CaptchaChatsSettingsRepo(
     override val ResultRow.asId: IdChatIdentifier
         get() = IdChatIdentifier(RawChatId(get(chatIdColumn)), get(threadIdColumn) ?.let(::MessageThreadId))
 
-    override fun createAndInsertId(value: ChatSettings, it: InsertStatement<Number>): IdChatIdentifier {
+    override fun createAndInsertId(value: ChatSettings, it: UpdateBuilder<Int>): IdChatIdentifier {
         it[chatIdColumn] = value.chatId.chatId.long
         it[threadIdColumn] = value.chatId.threadId ?.long
         return value.chatId

@@ -232,7 +232,7 @@ private suspend fun BehaviourContext.banUser(
             }
         }
     }
-): Result<Boolean> = safelyWithResult {
+): Result<Boolean> = runCatchingSafely {
     restrictChatMember(chat, user, permissions = leftRestrictionsPermissions)
     banChatMember(chat, user)
 }.onFailure {

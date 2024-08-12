@@ -49,7 +49,7 @@ private class ExposedChatsSettingsTable(
         it[chatSettingsColumn] = banPluginSerialFormat.encodeToString(ChatSettings.serializer(), v)
     }
 
-    override fun insertKey(k: IdChatIdentifier, v: ChatSettings, it: InsertStatement<Number>) {
+    override fun insertKey(k: IdChatIdentifier, v: ChatSettings, it: UpdateBuilder<Int>) {
         it[keyColumn] = k.chatId.long
         it[threadIdColumn] = k.threadId ?.long
     }
