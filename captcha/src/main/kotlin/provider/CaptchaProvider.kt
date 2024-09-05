@@ -24,6 +24,7 @@ import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.api.send.sendDice
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
+import dev.inmo.tgbotapi.extensions.behaviour_builder.createSubContextAndDoAsynchronouslyWithUpdatesFilter
 import dev.inmo.tgbotapi.extensions.behaviour_builder.createSubContextAndDoWithUpdatesFilter
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.asSlotMachineReelImage
@@ -93,96 +94,94 @@ sealed class CaptchaProvider {
     ) {
         val userBanDateTime = eventDateTime + checkTimeSpan
         newUsers.map { user ->
-            launch {
-                createSubContextAndDoWithUpdatesFilter {
-                    val worker = allocateWorker(
-                        eventDateTime,
-                        chat,
-                        user,
-                        leftRestrictionsPermissions,
-                        adminsApi,
-                        kickOnUnsuccess,
-                        joinRequest
-                    )
-                    val deferred = async {
-                        runCatchingSafely {
-                            with(worker) {
-                                doCaptcha()
-                            }
-                        }.onFailure {
-                            this@CaptchaProvider.logger.e("Unable to do captcha", it)
-                        }.getOrElse { false }
-                    }
-
-                    val subscope = LinkedSupervisorScope()
-                    subscope.launch {
-                        delay((userBanDateTime - eventDateTime).millisecondsLong)
-                        subscope.cancel()
-                    }
-                    subscope.launch {
-                        deferred.await()
-                        subscope.cancel()
-                    }
-
-                    subscope.coroutineContext.job.join()
-
-                    val passed = runCatching {
-                        deferred.getCompleted()
+            createSubContextAndDoAsynchronouslyWithUpdatesFilter {
+                val worker = allocateWorker(
+                    eventDateTime,
+                    chat,
+                    user,
+                    leftRestrictionsPermissions,
+                    adminsApi,
+                    kickOnUnsuccess,
+                    joinRequest
+                )
+                val deferred = async {
+                    runCatchingSafely {
+                        with(worker) {
+                            doCaptcha()
+                        }
                     }.onFailure {
-                        deferred.cancel()
+                        this@CaptchaProvider.logger.e("Unable to do captcha", it)
                     }.getOrElse { false }
+                }
 
-                    when {
-                        passed == null -> {
-                            send(chat, " ") {
-                                +"User" + mention(user) + underline("blocked me") + ", so, I can't perform check with captcha"
-                            }
-                        }
-                        passed -> {
-                            usersPassInfoRepo.add(
-                                user.id,
-                                UsersPassInfoRepo.PassInfo(
-                                    chat.id.toChatId(),
-                                    true,
-                                    complexity
-                                )
-                            )
-                            if (joinRequest) {
-                                safelyWithoutExceptions {
-                                    approveChatJoinRequest(chat, user)
-                                }
-                            } else {
-                                safelyWithoutExceptions {
-                                    restrictChatMember(
-                                        chat,
-                                        user,
-                                        permissions = leftRestrictionsPermissions
-                                    )
-                                }
-                            }
-                        }
-                        else -> {
-                            usersPassInfoRepo.add(
-                                user.id,
-                                UsersPassInfoRepo.PassInfo(
-                                    chat.id.toChatId(),
-                                    false,
-                                    complexity
-                                )
-                            )
-                            send(chat, " ") {
-                                +"User" + mention(user) + underline("didn't pass") + "captcha"
-                            }
+                val subscope = LinkedSupervisorScope()
+                subscope.launch {
+                    delay((userBanDateTime - eventDateTime).millisecondsLong)
+                    subscope.cancel()
+                }
+                subscope.launch {
+                    deferred.await()
+                    subscope.cancel()
+                }
 
-                            when {
-                                joinRequest -> runCatchingSafely { declineChatJoinRequest(chat.id, user.id) }
-                                kickOnUnsuccess -> banChatMember(chat.id, user)
+                subscope.coroutineContext.job.join()
+
+                val passed = runCatching {
+                    deferred.getCompleted()
+                }.onFailure {
+                    deferred.cancel()
+                }.getOrElse { false }
+
+                when {
+                    passed == null -> {
+                        send(chat, " ") {
+                            +"User" + mention(user) + underline("blocked me") + ", so, I can't perform check with captcha"
+                        }
+                    }
+                    passed -> {
+                        usersPassInfoRepo.add(
+                            user.id,
+                            UsersPassInfoRepo.PassInfo(
+                                chat.id.toChatId(),
+                                true,
+                                complexity
+                            )
+                        )
+                        if (joinRequest) {
+                            safelyWithoutExceptions {
+                                approveChatJoinRequest(chat, user)
+                            }
+                        } else {
+                            safelyWithoutExceptions {
+                                restrictChatMember(
+                                    chat,
+                                    user,
+                                    permissions = leftRestrictionsPermissions
+                                )
                             }
                         }
                     }
-                    with(worker) {
-                        onCloseCaptcha(passed)
+                    else -> {
+                        usersPassInfoRepo.add(
+                            user.id,
+                            UsersPassInfoRepo.PassInfo(
+                                chat.id.toChatId(),
+                                false,
+                                complexity
+                            )
+                        )
+                        send(chat, " ") {
+                            +"User" + mention(user) + underline("didn't pass") + "captcha"
+                        }
+
+                        when {
+                            joinRequest -> runCatchingSafely { declineChatJoinRequest(chat.id, user.id) }
+                            kickOnUnsuccess -> banChatMember(chat.id, user)
+                        }
                     }
+                }
+                with(worker) {
+                    onCloseCaptcha(passed)
                 }
             }
         }.joinAll()
@@ -223,7 +222,7 @@ private suspend fun BehaviourContext.banUser(
     user: User,
     leftRestrictionsPermissions: ChatPermissions,
     onFailure: suspend BehaviourContext.(Throwable) -> Unit = {
-        safelyWithResult {
+        runCatchingSafely {
             send(
                 chat
             ) {
