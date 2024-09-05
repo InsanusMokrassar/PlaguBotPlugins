@@ -380,7 +380,7 @@ class BanPlugin : Plugin {
                         }.either()
 
 
-                        val banned = safelyWithResult {
+                        val banned = runCatchingSafely {
                             userInReply.onFirst {
                                 banChatMember(commandMessage.chat, it.id)
                             }.onSecond {
