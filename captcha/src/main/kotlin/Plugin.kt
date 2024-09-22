@@ -7,6 +7,7 @@ import dev.inmo.micro_utils.coroutines.safelyWithoutExceptions
 import dev.inmo.micro_utils.koin.singleWithRandomQualifier
 import dev.inmo.micro_utils.repos.create
 import dev.inmo.plagubot.Plugin
+import dev.inmo.plagubot.database
 import dev.inmo.plagubot.plugins.captcha.cas.CASChecker
 import dev.inmo.plagubot.plugins.captcha.cas.KtorCASChecker
 import dev.inmo.plagubot.plugins.captcha.db.CaptchaChatsSettingsRepo
@@ -44,7 +45,6 @@ import dev.inmo.tgbotapi.types.chat.RestrictionsChatPermissions
 import dev.inmo.tgbotapi.types.chat.User
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
 import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
-import dev.inmo.tgbotapi.types.message.abstracts.Message
 import dev.inmo.tgbotapi.utils.buildEntities
 import dev.inmo.tgbotapi.utils.link
 import dev.inmo.tgbotapi.utils.mention
@@ -53,7 +53,6 @@ import korlibs.time.DateTime
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import org.jetbrains.exposed.sql.Database
 import org.koin.core.Koin
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -83,7 +82,7 @@ private val changeCaptchaMethodCommandRegex = Regex(
 @Serializable
 class CaptchaBotPlugin : Plugin {
 
-    override fun Module.setupDI(database: Database, params: JsonObject) {
+    override fun Module.setupDI(config: JsonObject) {
         single { CaptchaChatsSettingsRepo(database) }
 
         single(named(uuid4().toString())) {
