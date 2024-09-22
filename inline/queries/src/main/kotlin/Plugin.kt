@@ -6,6 +6,7 @@ import dev.inmo.plagubot.Plugin
 import dev.inmo.plagubot.plugins.inline.queries.models.Format
 import dev.inmo.plagubot.plugins.inline.queries.models.OfferTemplate
 import dev.inmo.plagubot.plugins.inline.queries.repos.InlineTemplatesRepo
+import dev.inmo.plagubot.registerConfig
 import dev.inmo.tgbotapi.bot.exceptions.RequestException
 import dev.inmo.tgbotapi.extensions.api.answers.answerInlineQuery
 import dev.inmo.tgbotapi.extensions.api.send.reply
@@ -16,9 +17,7 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatInlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineQueryInCurrentChatButton
 import dev.inmo.tgbotapi.types.inlineQueryAnswerResultsLimit
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import org.jetbrains.exposed.sql.Database
 import org.koin.core.Koin
 import org.koin.core.module.Module
 
@@ -27,8 +26,8 @@ object Plugin : Plugin {
     internal data class Config(
         val preset: List<OfferTemplate>
     )
-    override fun Module.setupDI(database: Database, params: JsonObject) {
-        single { get<Json>().decodeFromJsonElement(Config.serializer(), params["inlines"] ?: return@single Config(emptyList())) }
+    override fun Module.setupDI(config: JsonObject) {
+        registerConfig<Config>("inlines") { Config(emptyList()) }
         single { InlineTemplatesRepo(getOrNull<Config>() ?.preset ?.toMutableSet() ?: mutableSetOf()) }
     }
 

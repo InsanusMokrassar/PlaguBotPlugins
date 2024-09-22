@@ -8,11 +8,11 @@ import dev.inmo.micro_utils.common.mapOnSecond
 import dev.inmo.micro_utils.common.onFirst
 import dev.inmo.micro_utils.common.onSecond
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
-import dev.inmo.micro_utils.coroutines.safelyWithResult
 import dev.inmo.micro_utils.koin.singleWithBinds
 import dev.inmo.micro_utils.repos.add
 import dev.inmo.micro_utils.repos.set
 import dev.inmo.plagubot.Plugin
+import dev.inmo.plagubot.database
 import dev.inmo.plagubot.plugins.bans.db.ChatsSettingsTable
 import dev.inmo.plagubot.plugins.bans.db.WarningsTable
 import dev.inmo.plagubot.plugins.bans.db.chatsSettingsTable
@@ -30,7 +30,6 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.utils.marker_factories.ByUserMessageMarkerFactory
-import dev.inmo.tgbotapi.extensions.utils.asUser
 import dev.inmo.tgbotapi.extensions.utils.userOrNull
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.libraries.cache.admins.doAfterVerification
@@ -54,7 +53,6 @@ import dev.inmo.tgbotapi.utils.mention
 import dev.inmo.tgbotapi.utils.regular
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import org.jetbrains.exposed.sql.Database
 import org.koin.core.Koin
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -80,7 +78,7 @@ internal const val banCommand = "ban"
 @Serializable
 class BanPlugin : Plugin {
 
-    override fun Module.setupDI(database: Database, params: JsonObject) {
+    override fun Module.setupDI(config: JsonObject) {
         single(named("warningsTable")) { database.warningsTable }
         single(named("chatsSettingsTable")) { database.chatsSettingsTable }
         singleWithBinds (named("BanPluginSettingsProvider")) {

@@ -2,6 +2,7 @@ package dev.inmo.plagubot.plugins.welcome
 
 import dev.inmo.kslog.common.logger
 import dev.inmo.plagubot.Plugin
+import dev.inmo.plagubot.database
 import dev.inmo.plagubot.plugins.commands.full
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
 import dev.inmo.plagubot.plugins.welcome.WelcomePlugin.Companion.pluginConfigSectionName
@@ -9,6 +10,7 @@ import dev.inmo.plagubot.plugins.welcome.WelcomePlugin.Config
 import dev.inmo.plagubot.plugins.welcome.db.WelcomeTable
 import dev.inmo.plagubot.plugins.welcome.model.ChatSettings
 import dev.inmo.plagubot.plugins.welcome.model.sendWelcome
+import dev.inmo.plagubot.registerConfig
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.delete
 import dev.inmo.tgbotapi.extensions.api.edit.edit
@@ -83,8 +85,8 @@ class WelcomePlugin : Plugin {
     /**
      * DI configuration of current plugin. Here we are decoding [Config] and put it into [Module] receiver
      */
-    override fun Module.setupDI(database: Database, params: JsonObject) {
-        single { get<Json>().decodeFromJsonElement(Config.serializer(), params[pluginConfigSectionName] ?: return@single Config()) }
+    override fun Module.setupDI(params: JsonObject) {
+        registerConfig<Config>(pluginConfigSectionName) { Config() }
         single { WelcomeTable(database) }
         single(named("welcome")) { BotCommand("welcome", "Use to setup welcome message").full(BotCommandScope.AllChatAdministrators) }
         single(named("welcome")) { WelcomeInlineButtons(get(), get(), get<Config>().recacheChatId) } binds arrayOf(

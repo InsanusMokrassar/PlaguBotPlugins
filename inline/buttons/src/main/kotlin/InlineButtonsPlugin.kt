@@ -90,7 +90,7 @@ class InlineButtonsPlugin : InlineButtonsDrawer, Plugin{
         }
     }
 
-    override fun Module.setupDI(database: Database, params: JsonObject) {
+    override fun Module.setupDI(params: JsonObject) {
         single { this@InlineButtonsPlugin } binds arrayOf(
             InlineButtonsDrawer::class
         )

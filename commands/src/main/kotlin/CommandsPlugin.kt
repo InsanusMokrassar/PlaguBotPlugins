@@ -15,7 +15,6 @@ import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.botCommandsLimit
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import org.jetbrains.exposed.sql.Database
 import org.koin.core.Koin
 import org.koin.core.module.Module
 
@@ -32,7 +31,7 @@ object CommandsPlugin : Plugin {
      * Creating [CommandsKeeper] and pass it to the DI. It uses [org.koin.core.scope.Scope.getAll] to get all the
      * [BotCommandFullInfo] instances declared in the DI.
      */
-    override fun Module.setupDI(database: Database, params: JsonObject) {
+    override fun Module.setupDI(config: JsonObject) {
         single { CommandsKeeper(getAll<BotCommandFullInfo>().distinct()) }
     }
 
