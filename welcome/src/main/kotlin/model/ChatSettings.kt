@@ -24,9 +24,9 @@ internal suspend fun ChatSettings.sendWelcome(
     replyTo: MessageId? = null
 ) = runCatchingSafely {
     bot.copyMessage(
-        targetChatId,
         sourceChatId,
         sourceMessageId,
+        targetChatId,
         replyParameters = replyTo ?.let { ReplyParameters(targetChatId, it, allowSendingWithoutReply = true) },
     )
 }.onFailure {
@@ -35,8 +35,8 @@ internal suspend fun ChatSettings.sendWelcome(
             return runCatchingSafely {
                 val forwarded = bot.forwardMessage(
                     fromChatId = sourceChatId,
-                    toChatId = recacheChatId,
-                    messageId = sourceMessageId
+                    messageId = sourceMessageId,
+                    toChatId = recacheChatId
                 )
                 bot.copyMessage(
                     targetChatId,
