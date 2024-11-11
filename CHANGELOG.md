@@ -2,6 +2,10 @@
 
 ## 0.24.1
 
+* `Versions`:
+  * `PlaguBot`: `10.1.1`
+  * `TelegramBotAPILibraries`: `0.26.1`
+
 ## 0.24.0
 
 * `Versions`:
