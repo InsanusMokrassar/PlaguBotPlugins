@@ -43,11 +43,11 @@ import dev.inmo.tgbotapi.types.commands.BotCommandScope
 import dev.inmo.tgbotapi.types.message.abstracts.*
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
-import dev.inmo.tgbotapi.types.message.textsources.bold
-import dev.inmo.tgbotapi.types.message.textsources.code
-import dev.inmo.tgbotapi.types.message.textsources.mention
+import dev.inmo.tgbotapi.types.message.textsources.boldTextSource
+import dev.inmo.tgbotapi.types.message.textsources.codeTextSource
+import dev.inmo.tgbotapi.types.message.textsources.mentionTextSource
 import dev.inmo.tgbotapi.types.message.textsources.plus
-import dev.inmo.tgbotapi.types.message.textsources.regular
+import dev.inmo.tgbotapi.types.message.textsources.regularTextSource
 import dev.inmo.tgbotapi.utils.bold
 import dev.inmo.tgbotapi.utils.mention
 import dev.inmo.tgbotapi.utils.regular
@@ -193,7 +193,7 @@ class BanPlugin : Plugin {
 
                 if (sentByAdmin) {
                     if (!chatSettings.allowWarnAdmins && userInReply != null && userInReplyIsAnAdmin) {
-                        reply(commandMessage, regular("User ") + mention(userInReply) + " can't be warned - he is an admin")
+                        reply(commandMessage, regularTextSource("User ") + mentionTextSource(userInReply) + " can't be warned - he is an admin")
                         return@onCommand
                     }
                     val key = commandMessage.chat.id to chatId
@@ -272,13 +272,13 @@ class BanPlugin : Plugin {
                     } else {
                         reply(
                             commandMessage,
-                            listOf(regular("User or channel have no warns"))
+                            listOf(regularTextSource("User or channel have no warns"))
                         )
                     }
                 } else {
                     reply(
                         commandMessage,
-                        listOf(regular("Sorry, you are not allowed for this action"))
+                        listOf(regularTextSource("Sorry, you are not allowed for this action"))
                     )
                 }
             }
@@ -306,9 +306,9 @@ class BanPlugin : Plugin {
                     reply(
                         commandMessage,
                         listOf(
-                            regular("Usage: "),
-                            code("/setChatWarningsCountCommand 3"),
-                            regular(" (or any other number more than 0)")
+                            regularTextSource("Usage: "),
+                            codeTextSource("/setChatWarningsCountCommand 3"),
+                            regularTextSource(" (or any other number more than 0)")
                         )
                     )
                     return@onCommand
@@ -320,12 +320,12 @@ class BanPlugin : Plugin {
                     )
                     reply(
                         commandMessage,
-                        listOf(regular("Now warnings count is $newCount"))
+                        listOf(regularTextSource("Now warnings count is $newCount"))
                     )
                 } else {
                     reply(
                         commandMessage,
-                        listOf(regular("Sorry, you are not allowed for this action"))
+                        listOf(regularTextSource("Sorry, you are not allowed for this action"))
                     )
                 }
             }
@@ -352,11 +352,11 @@ class BanPlugin : Plugin {
                 val count = warningsRepository.count(messageToSearch.chat.id to user.id)
                 val maxCount = (chatsSettings.get(messageToSearch.chat.id) ?: ChatSettings()).warningsUntilBan
                 val mention = (user.userOrNull()) ?.let {
-                    it.mention("${it.firstName} ${it.lastName}")
-                } ?: (user as? ChannelChat) ?.title ?.let(::regular) ?: return@onCommand
+                    it.mentionTextSource("${it.firstName} ${it.lastName}")
+                } ?: (user as? ChannelChat) ?.title ?.let(::regularTextSource) ?: return@onCommand
                 reply(
                     commandMessage,
-                    regular("User ") + mention + " have " + bold("$count/$maxCount") + " (" + bold("${maxCount - count}") + " left until ban)"
+                    regularTextSource("User ") + mention + " have " + boldTextSource("$count/$maxCount") + " (" + boldTextSource("${maxCount - count}") + " left until ban)"
                 )
             }
         }
@@ -388,9 +388,9 @@ class BanPlugin : Plugin {
 
                         if (banned) {
                             val mention = userInReply.mapOnFirst {
-                                mention(it)
+                                mentionTextSource(it)
                             } ?: userInReply.mapOnSecond {
-                                regular(it.title)
+                                regularTextSource(it.title)
                             } ?: return@doAfterVerification
                             reply(commandMessage) {
                                 +"User " + mention + " has been banned"
