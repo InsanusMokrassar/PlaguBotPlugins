@@ -2,6 +2,13 @@
 
 ## 0.24.4
 
+* `Versions`:
+  * `Serialization`: `1.8.1`
+  * `PlaguBot`: `10.6.0`
+  * `KSLog`: `1.4.2`
+  * `MicroUtils`: `0.25.8`
+  * `TelegramBotAPILibraries`: `0.26.6`
+
 ## 0.24.3
 
 * `Versions`:
