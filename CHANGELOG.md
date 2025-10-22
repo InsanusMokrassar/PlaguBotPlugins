@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.25.0
+
+* `Versions`:
+    * `Kotlin`: `2.2.20`
+    * `PlaguBot`: `10.9.0`
+    * `KSLog`: `1.5.1`
+    * `MicroUtils`: `0.26.6`
+    * `TelegramBotAPILibraries`: `0.27.0`
+    * `Dokka`: `2.1.0`
+
 ## 0.24.6
 
 * `Versions`:
