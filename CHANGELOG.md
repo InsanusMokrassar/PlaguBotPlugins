@@ -3,12 +3,23 @@
 ## 0.25.0
 
 * `Versions`:
-    * `Kotlin`: `2.3.10`
-    * `Serialization`: `1.10.0`
-    * `PlaguBot`: `11.0.0`
-    * `KSLog`: `1.6.0`
-    * `MicroUtils`: `0.29.1`
-    * `TelegramBotAPILibraries`: `0.29.0`
+  * `Kotlin`: `2.3.10`
+  * `Serialization`: `1.10.0`
+  * `PlaguBot`: `11.0.0`
+  * `KSLog`: `1.6.0`
+  * `MicroUtils`: `0.29.1`
+  * `TelegramBotAPILibraries`: `0.29.0`
+
+## 0.24.7
+
+* `Versions`:
+    * `Kotlin`: `2.2.10` -> `2.2.21`
+    * `KSLog`: `1.5.0` -> `1.5.2`
+    * `MicroUtils`: `0.26.3` -> `0.26.8`
+    * `PlaguBot`: `10.8.0` -> `10.10.0`
+    * `TelegramBotAPILibraries`: `0.26.8` -> `0.28.0`
+    * `Dokka`: `2.0.0` -> `2.1.0`
+    * `NMCP`: `1.0.2` -> `1.3.0`
 
 ## 0.24.6
 
