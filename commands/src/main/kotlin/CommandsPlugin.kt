@@ -5,7 +5,7 @@ import dev.inmo.kslog.common.d
 import dev.inmo.kslog.common.e
 import dev.inmo.kslog.common.i
 import dev.inmo.kslog.common.logTag
-import dev.inmo.micro_utils.coroutines.runCatchingSafely
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.plagubot.Plugin
 import dev.inmo.tgbotapi.extensions.api.bot.deleteMyCommands
@@ -36,7 +36,7 @@ object CommandsPlugin : Plugin {
     }
 
     private suspend fun BehaviourContext.setScopeCommands(key: CommandsKeeperKey, commands: List<BotCommand>?) {
-        runCatchingSafely {
+        runCatchingLogging {
             commands ?.let {
                 setMyCommands(
                     commands.distinctBy { it.command }.take(botCommandsLimit.last + 1),

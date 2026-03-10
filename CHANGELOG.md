@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.25.0
+
+* `Versions`:
+  * `Kotlin`: `2.3.10`
+  * `Serialization`: `1.10.0`
+  * `PlaguBot`: `11.0.0`
+  * `KSLog`: `1.6.0`
+  * `MicroUtils`: `0.29.1`
+  * `TelegramBotAPILibraries`: `0.29.0`
+
 ## 0.24.7
 
 * `Versions`:

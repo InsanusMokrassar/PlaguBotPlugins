@@ -6,9 +6,7 @@ import dev.inmo.micro_utils.repos.mappers.withMapper
 import dev.inmo.plagubot.plugins.bans.utils.banPluginSerialFormat
 import dev.inmo.tgbotapi.types.*
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
 
 internal val Database.warningsTable: WarningsTable
     get() = ExposedKeyValuesRepo(

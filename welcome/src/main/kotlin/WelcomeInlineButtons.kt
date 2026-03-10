@@ -1,6 +1,6 @@
 package dev.inmo.plagubot.plugins.welcome
 
-import dev.inmo.micro_utils.coroutines.runCatchingSafely
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.plagubot.plugins.inline.buttons.InlineButtonsDrawer
 import dev.inmo.plagubot.plugins.inline.buttons.utils.InlineButtonsKeys
 import dev.inmo.plagubot.plugins.inline.buttons.utils.extractChatIdAndData

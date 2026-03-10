@@ -1,6 +1,6 @@
 package dev.inmo.plagubot.plugins.bans
 
-import dev.inmo.micro_utils.coroutines.runCatchingSafely
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.micro_utils.repos.set
 import dev.inmo.plagubot.plugins.bans.db.ChatsSettingsTable
 import dev.inmo.plagubot.plugins.bans.models.ChatSettings
@@ -145,7 +145,7 @@ internal class BansInlineButtonsDrawer(
             reply(query.message, "Updated")
         }
 
-        runCatchingSafely { drawInlineButtons(chatId, query.user.id, query.message.messageId, InlineButtonsKeys.Settings) }
+        runCatchingLogging { drawInlineButtons(chatId, query.user.id, query.message.messageId, InlineButtonsKeys.Settings) }
 
         answer(query)
 
@@ -165,7 +165,7 @@ internal class BansInlineButtonsDrawer(
             return
         }
 
-        runCatchingSafely {
+        runCatchingLogging {
             editMessageReplyMarkup(
                 userId,
                 messageId,
