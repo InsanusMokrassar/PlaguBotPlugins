@@ -1,6 +1,6 @@
 package dev.inmo.plagubot.plugins.welcome.model
 
-import dev.inmo.micro_utils.coroutines.runCatchingSafely
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.tgbotapi.bot.TelegramBot
 import dev.inmo.tgbotapi.bot.exceptions.RequestException
 import dev.inmo.tgbotapi.extensions.api.forwardMessage
@@ -22,7 +22,7 @@ internal suspend fun ChatSettings.sendWelcome(
     recacheChatId: IdChatIdentifier?,
     targetChatId: IdChatIdentifier = this.targetChatId,
     replyTo: MessageId? = null
-) = runCatchingSafely {
+) = runCatchingLogging {
     bot.copyMessage(
         sourceChatId,
         sourceMessageId,
@@ -32,7 +32,7 @@ internal suspend fun ChatSettings.sendWelcome(
 }.onFailure {
     recacheChatId ?.let {
         if (it is RequestException && it.plainAnswer.contains("message to copy not found")) {
-            return runCatchingSafely {
+            return runCatchingLogging {
                 val forwarded = bot.forwardMessage(
                     fromChatId = sourceChatId,
                     messageId = sourceMessageId,

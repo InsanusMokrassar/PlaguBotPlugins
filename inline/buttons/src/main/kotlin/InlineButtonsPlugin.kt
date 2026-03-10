@@ -20,13 +20,9 @@ import dev.inmo.tgbotapi.libraries.cache.admins.doAfterVerification
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.UserId
-import dev.inmo.tgbotapi.types.chat.ExtendedBot
-import dev.inmo.tgbotapi.utils.code
-import dev.inmo.tgbotapi.utils.link
 import dev.inmo.tgbotapi.utils.row
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import org.jetbrains.exposed.sql.Database
 import org.koin.core.Koin
 import org.koin.core.module.Module
 import org.koin.core.scope.Scope

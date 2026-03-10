@@ -1,6 +1,6 @@
 package dev.inmo.plagubot.plugins.captcha.settings
 
-import dev.inmo.micro_utils.coroutines.runCatchingSafely
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.micro_utils.repos.create
 import dev.inmo.micro_utils.repos.exposed.initTable
 import dev.inmo.micro_utils.repos.exposed.keyvalue.AbstractExposedKeyValueRepo
@@ -38,14 +38,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.builtins.PairSerializer
-import kotlinx.serialization.builtins.serializer
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.ISqlExpressionBuilder
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.statements.InsertStatement
-import org.jetbrains.exposed.sql.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.Koin
 
 class InlineSettings(
@@ -71,10 +70,10 @@ class InlineSettings(
         override val keyColumn = text("messageInfo")
         private val chatIdColumn = long("chatId")
         private val threadIdColumn = long("threadId").nullable().default(null)
-        override val selectById: ISqlExpressionBuilder.(Pair<UserId, MessageId>) -> Op<Boolean> = {
+        override val selectById: (Pair<UserId, MessageId>) -> Op<Boolean> = {
             keyColumn.eq(stringFormat.encodeToString(pairSerializer, it))
         }
-        override val selectByValue: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = {
+        override val selectByValue: (IdChatIdentifier) -> Op<Boolean> = {
             chatIdColumn.eq(it.chatId.long).and(it.threadId ?.long ?.let { threadIdColumn.eq(it) } ?: threadIdColumn.isNull())
         }
         override val ResultRow.asKey: Pair<UserId, MessageId>
@@ -255,7 +254,7 @@ class InlineSettings(
                     chatsSettingsRepo.update(chatId, newChatSettings)
                 }
 
-                runCatchingSafely {
+                runCatchingLogging {
                     onComplete(newChatSettings, it)
                 }
 

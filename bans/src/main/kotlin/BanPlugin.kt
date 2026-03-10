@@ -7,7 +7,7 @@ import dev.inmo.micro_utils.common.mapOnFirst
 import dev.inmo.micro_utils.common.mapOnSecond
 import dev.inmo.micro_utils.common.onFirst
 import dev.inmo.micro_utils.common.onSecond
-import dev.inmo.micro_utils.coroutines.runCatchingSafely
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.micro_utils.koin.singleWithBinds
 import dev.inmo.micro_utils.repos.add
 import dev.inmo.micro_utils.repos.set
@@ -202,7 +202,7 @@ class BanPlugin : Plugin {
                     if (warnings >= chatSettings.warningsUntilBan) {
                         when {
                             userInReply != null -> {
-                                val banned = runCatchingSafely {
+                                val banned = runCatchingLogging {
                                     banChatMember(commandMessage.chat, userInReply)
                                 }.isSuccess
                                 reply(
@@ -215,7 +215,7 @@ class BanPlugin : Plugin {
                                 }
                             }
                             channelInReply != null -> {
-                                val banned = runCatchingSafely {
+                                val banned = runCatchingLogging {
                                     banChatSenderChat(commandMessage.chat, channelInReply.id)
                                 }.isSuccess
                                 reply(
@@ -378,7 +378,7 @@ class BanPlugin : Plugin {
                         }.either()
 
 
-                        val banned = runCatchingSafely {
+                        val banned = runCatchingLogging {
                             userInReply.onFirst {
                                 banChatMember(commandMessage.chat, it.id)
                             }.onSecond {

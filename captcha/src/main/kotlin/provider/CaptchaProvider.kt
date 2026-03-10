@@ -7,7 +7,8 @@ import korlibs.time.seconds
 import dev.inmo.kslog.common.e
 import dev.inmo.kslog.common.logger
 import dev.inmo.micro_utils.coroutines.LinkedSupervisorScope
-import dev.inmo.micro_utils.coroutines.runCatchingSafely
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.micro_utils.coroutines.safelyWithResult
 import dev.inmo.micro_utils.coroutines.safelyWithoutExceptions
 import dev.inmo.micro_utils.repos.add
@@ -105,7 +106,7 @@ sealed class CaptchaProvider {
                     joinRequest
                 )
                 val deferred = async {
-                    runCatchingSafely {
+                    runCatchingLogging {
                         with(worker) {
                             doCaptcha()
                         }
@@ -148,11 +149,11 @@ sealed class CaptchaProvider {
                             )
                         )
                         if (joinRequest) {
-                            safelyWithoutExceptions {
+                            runCatchingLogging {
                                 approveChatJoinRequest(chat, user)
                             }
                         } else {
-                            safelyWithoutExceptions {
+                            runCatchingLogging {
                                 restrictChatMember(
                                     chat,
                                     user,
@@ -175,7 +176,7 @@ sealed class CaptchaProvider {
                         }
 
                         when {
-                            joinRequest -> runCatchingSafely { declineChatJoinRequest(chat.id, user.id) }
+                            joinRequest -> runCatchingLogging { declineChatJoinRequest(chat.id, user.id) }
                             kickOnUnsuccess -> banChatMember(chat.id, user)
                         }
                     }
@@ -206,7 +207,7 @@ private suspend fun BehaviourContext.sendAdminCanceledMessage(
     captchaSolver: User,
     admin: User
 ) {
-    safelyWithoutExceptions {
+    runCatching {
         send(
             chat
         ) {
@@ -222,7 +223,7 @@ private suspend fun BehaviourContext.banUser(
     user: User,
     leftRestrictionsPermissions: ChatPermissions,
     onFailure: suspend BehaviourContext.(Throwable) -> Unit = {
-        runCatchingSafely {
+        runCatching {
             send(
                 chat
             ) {
@@ -231,7 +232,7 @@ private suspend fun BehaviourContext.banUser(
             }
         }
     }
-): Result<Boolean> = runCatchingSafely {
+): Result<Unit> = runCatchingLogging {
     restrictChatMember(chat, user, permissions = leftRestrictionsPermissions)
     banChatMember(chat, user)
 }.onFailure {
@@ -261,7 +262,7 @@ data class SlotMachineCaptchaProvider(
                 mention(user)
                 regular(", $captchaText")
             }
-            val sentMessage = runCatchingSafely {
+            val sentMessage = runCatchingLogging {
                 send(
                     if (writeUserDirectly) user else chat,
                 ) {
@@ -291,7 +292,7 @@ data class SlotMachineCaptchaProvider(
                     !it.message.sameMessage(sentDice) -> false
                     it.data == cancelData && adminsApi ?.isAdmin(chat.id, it.user.id) == true -> return@filter true
                     it.data == cancelData && adminsApi ?.isAdmin(chat.id, it.user.id) != true -> {
-                        runCatchingSafely {
+                        runCatchingLogging {
                             answer(
                                 it,
                                 "This button is only for admins"
@@ -300,16 +301,16 @@ data class SlotMachineCaptchaProvider(
                         false
                     }
                     it.user.id != user.id -> {
-                        runCatchingSafely { answer(it, "This button is not for you") }
+                        runCatchingLogging { answer(it, "This button is not for you") }
                         false
                     }
                     it.data != leftToClick.first() -> {
-                        runCatchingSafely { answer(it, "Nope") }
+                        runCatchingLogging { answer(it, "Nope") }
                         false
                     }
                     else -> {
                         clicked.add(leftToClick.removeFirst())
-                        runCatchingSafely { answer(it, "Ok, next one") }
+                        runCatchingLogging { answer(it, "Ok, next one") }
                         edit(sentMessage) {
                             baseBuilder()
                             +": ${buildTemplate()}"
@@ -327,7 +328,7 @@ data class SlotMachineCaptchaProvider(
                 delete(messagesToDelete)
             }.onFailure {
                 while (messagesToDelete.isNotEmpty()) {
-                    runCatchingSafely { delete(messagesToDelete.removeFirst()) }
+                    runCatchingLogging { delete(messagesToDelete.removeFirst()) }
                 }
             }
         }
@@ -365,7 +366,7 @@ data class SimpleCaptchaProvider(
         private var sentMessage: AccessibleMessage? = null
         override suspend fun BehaviourContext.doCaptcha(): Boolean? {
             val callbackData = uuid4().toString()
-            val sentMessage = runCatchingSafely {
+            val sentMessage = runCatchingLogging {
                 send(
                     if (writeUserDirectly) user else chat,
                     replyMarkup = inlineKeyboard {
@@ -393,13 +394,13 @@ data class SimpleCaptchaProvider(
                     it.data == callbackData && it.user.id == user.id -> true
                     !writeUserDirectly && it.data == cancelData && (adminsApi ?.isAdmin(chat.id, it.user.id) == true) -> true
                     it.data == callbackData -> {
-                        runCatchingSafely {
+                        runCatchingLogging {
                             answer(it, "This button is not for you")
                         }
                         false
                     }
                     it.data == cancelData -> {
-                        runCatchingSafely {
+                        runCatchingLogging {
                             answer(it, "This button is for admins only")
                         }
                         false
@@ -408,7 +409,7 @@ data class SimpleCaptchaProvider(
                 }
             }.first()
 
-            runCatchingSafely {
+            runCatchingLogging {
                 answer(
                     pushed,
                     when (pushed.data) {
@@ -525,7 +526,7 @@ data class ExpressionCaptchaProvider(
                 val correctAnswerPosition = Random.nextInt(orderedAnswers.size)
                 orderedAnswers.add(correctAnswerPosition, callbackData.first)
             }.toList()
-            val sentMessage = runCatchingSafely {
+            val sentMessage = runCatchingLogging {
                 send(
                     if (reactOnJoinRequest) user else chat,
                     replyMarkup = inlineKeyboard {
@@ -563,7 +564,7 @@ data class ExpressionCaptchaProvider(
                         true
                     }
                     query.user.id != user.id -> {
-                        runCatchingSafely {
+                        runCatchingLogging {
                             answer(query, "It is not for you :)")
                         }
                         false
@@ -574,7 +575,7 @@ data class ExpressionCaptchaProvider(
                     else -> {
                         leftAttempts--
                         if (leftAttempts > 0) {
-                            runCatchingSafely {
+                            runCatchingLogging {
                                 answer(query, leftRetriesText + leftAttempts)
                             }
                         }

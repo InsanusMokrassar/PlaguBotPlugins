@@ -10,14 +10,15 @@ import dev.inmo.tgbotapi.types.MessageThreadId
 import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.toChatId
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.ISqlExpressionBuilder
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.statements.InsertStatement
-import org.jetbrains.exposed.sql.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.statements.InsertStatement
+import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.jdbc.Database
 
 private val captchaProviderSerialFormat = Json {
     ignoreUnknownKeys = true
@@ -45,7 +46,7 @@ class CaptchaChatsSettingsRepo(
 
     override val primaryKey = PrimaryKey(chatIdColumn)
 
-    override val selectByIds: ISqlExpressionBuilder.(List<IdChatIdentifier>) -> Op<Boolean> = {
+    override val selectByIds: (List<IdChatIdentifier>) -> Op<Boolean> = {
         fun IdChatIdentifier.createEq() = chatIdColumn.eq(chatId.long).and(
             threadId ?.let { threadIdColumn.eq(it.long) } ?: threadIdColumn.isNull()
         )
@@ -85,7 +86,7 @@ class CaptchaChatsSettingsRepo(
         autoPassKnown = get(autoPassKnownColumn),
     )
 
-    override val selectById: ISqlExpressionBuilder.(IdChatIdentifier) -> Op<Boolean> = { chatIdColumn.eq(it.chatId.long) }
+    override val selectById: (IdChatIdentifier) -> Op<Boolean> = { chatIdColumn.eq(it.chatId.long) }
     override val ResultRow.asObject: ChatSettings
         get() = ChatSettings(
             chatId = asId,

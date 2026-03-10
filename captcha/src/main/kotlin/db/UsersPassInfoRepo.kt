@@ -8,16 +8,15 @@ import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.UserId
 import dev.inmo.tgbotapi.types.toChatId
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.ISqlExpressionBuilder
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.statements.InsertStatement
-import org.jetbrains.exposed.sql.statements.UpdateBuilder
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserId, UsersPassInfoRepo.PassInfo>(
     database,
@@ -37,10 +36,10 @@ class UsersPassInfoRepo(database: Database) : AbstractExposedKeyValuesRepo<UserI
 
     override val keyColumn: Column<Long>
         get() = userIdColumn
-    override val selectById: ISqlExpressionBuilder.(UserId) -> Op<Boolean> = {
+    override val selectById: (UserId) -> Op<Boolean> = {
         userIdColumn.eq(it.chatId.long)
     }
-    override val selectByValue: ISqlExpressionBuilder.(PassInfo) -> Op<Boolean> = {
+    override val selectByValue: (PassInfo) -> Op<Boolean> = {
         chatIdColumn.eq(it.chatId.chatId.long).and(passedColumn.eq(it.passed))
     }
     override val ResultRow.asKey: UserId

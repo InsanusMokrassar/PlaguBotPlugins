@@ -1,9 +1,8 @@
 package dev.inmo.plagubot.plugins.captcha
 
 import com.benasher44.uuid.uuid4
-import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
-import dev.inmo.micro_utils.coroutines.runCatchingSafely
-import dev.inmo.micro_utils.coroutines.safelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.launchLoggingDropExceptions
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.micro_utils.koin.singleWithRandomQualifier
 import dev.inmo.micro_utils.repos.create
 import dev.inmo.plagubot.Plugin
@@ -198,7 +197,7 @@ class CaptchaBotPlugin : Plugin {
             val settings = chat.settings()
             if (!settings.enabled) return
 
-            safelyWithoutExceptions {
+            runCatching {
                 if (settings.autoRemoveEvents && msg != null) {
                     deleteMessage(msg)
                 }
@@ -218,7 +217,7 @@ class CaptchaBotPlugin : Plugin {
             newUsers = if (settings.casEnabled) {
                 newUsers.filterNot { user ->
                     casChecker.isBanned(user.id).also { isBanned ->
-                        runCatchingSafely {
+                        runCatchingLogging {
                             if (isBanned) {
                                 val entities = buildEntities {
                                     +"User " + mention(user) + " is banned in " + link("CAS System", "https://cas.chat/query?u=${user.id.chatId}")
@@ -229,7 +228,7 @@ class CaptchaBotPlugin : Plugin {
                                 } ?: send(chat, entities)
 
                                 when {
-                                    joinRequest -> runCatchingSafely { declineChatJoinRequest(chat.id, user.id) }
+                                    joinRequest -> runCatchingLogging { declineChatJoinRequest(chat.id, user.id) }
                                     settings.kickOnUnsuccess -> banChatMember(chat.id, user)
                                 }
                             }
@@ -244,7 +243,7 @@ class CaptchaBotPlugin : Plugin {
                 newUsers.filterNot { user ->
                     usersPassInfoRepo.havePassedChats(user.id, settings.captchaProvider.complexity).also {
                         if (it) {
-                            runCatchingSafely {
+                            runCatchingLogging {
                                 val entities = buildEntities {
                                     +"User " + mention(user) + " has passed captcha earlier. Captcha has been cancelled"
                                 }
@@ -254,7 +253,7 @@ class CaptchaBotPlugin : Plugin {
                                 } ?: send(chat, entities)
 
                                 when {
-                                    joinRequest -> runCatchingSafely { approveChatJoinRequest(chat.id, user.id) }
+                                    joinRequest -> runCatchingLogging { approveChatJoinRequest(chat.id, user.id) }
                                     else -> restrictChatMember(chat.id, user, permissions = defaultChatPermissions)
                                 }
                             }
@@ -315,7 +314,7 @@ class CaptchaBotPlugin : Plugin {
                 it.doAfterVerification(adminsAPI) {
                     val settings = it.chat.settings()
                     if (settings.autoRemoveCommands) {
-                        safelyWithoutExceptions { deleteMessage(it) }
+                        runCatching { deleteMessage(it) }
                     }
                     val commands = it.parseCommandsWithArgs()
                     val changeCommand = commands.keys.first {
@@ -452,7 +451,7 @@ class CaptchaBotPlugin : Plugin {
                     )
 
                     reply(message, "Ok, new users didn't pass captcha will be kicked").apply {
-                        launchSafelyWithoutExceptions {
+                        launchLoggingDropExceptions {
                             delay(5000L)
                             delete(this@apply)
                         }
@@ -474,7 +473,7 @@ class CaptchaBotPlugin : Plugin {
                     )
 
                     reply(message, "Ok, new users didn't passed captcha will NOT be kicked").apply {
-                        launchSafelyWithoutExceptions {
+                        launchLoggingDropExceptions {
                             delay(5000L)
                             delete(this@apply)
                         }
@@ -496,7 +495,7 @@ class CaptchaBotPlugin : Plugin {
                     )
 
                     reply(message, "Ok, CAS banned user will automatically fail captcha").apply {
-                        launchSafelyWithoutExceptions {
+                        launchLoggingDropExceptions {
                             delay(5000L)
                             delete(this@apply)
                         }
@@ -518,7 +517,7 @@ class CaptchaBotPlugin : Plugin {
                     )
 
                     reply(message, "Ok, CAS banned user will NOT automatically fail captcha").apply {
-                        launchSafelyWithoutExceptions {
+                        launchLoggingDropExceptions {
                             delay(5000L)
                             delete(this@apply)
                         }

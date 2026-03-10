@@ -7,12 +7,10 @@ import kotlinx.serialization.modules.polymorphic
 
 @Serializable
 sealed interface WorkMode {
-    @Serializable
     sealed interface EnabledForAdmins : WorkMode {
         @Serializable
         companion object Default : EnabledForAdmins
     }
-    @Serializable
     sealed interface EnabledForUsers : WorkMode {
         @Serializable
         companion object Default : EnabledForUsers

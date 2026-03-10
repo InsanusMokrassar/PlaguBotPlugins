@@ -7,10 +7,15 @@ import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.MessageThreadId
 import dev.inmo.tgbotapi.types.RawChatId
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 internal class WelcomeTable(
     override val database: Database
@@ -26,7 +31,7 @@ internal class WelcomeTable(
         initTable()
     }
 
-    private fun getInTransaction(chatId: IdChatIdentifier) = selectAll().where {
+    private fun Transaction.getInTransaction(chatId: IdChatIdentifier) = selectAll().where {
         targetChatIdColumn.eq(chatId.chatId.long).and(
             chatId.threadId ?.long ?.let { targetThreadIdColumn.eq(it) } ?: targetThreadIdColumn.isNull()
         )
