@@ -5,9 +5,11 @@ import dev.inmo.tgbotapi.bot.TelegramBot
 import dev.inmo.tgbotapi.bot.exceptions.RequestException
 import dev.inmo.tgbotapi.extensions.api.forwardMessage
 import dev.inmo.tgbotapi.extensions.api.send.copyMessage
+import dev.inmo.tgbotapi.extensions.utils.accessibleMessageOrNull
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.ReplyParameters
+import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -40,7 +42,7 @@ internal suspend fun ChatSettings.sendWelcome(
                 )
                 bot.copyMessage(
                     targetChatId,
-                    forwarded,
+                    forwarded.accessibleMessageOrNull() ?: error("Message is expected to be accessible"),
                     replyParameters = replyTo ?.let { ReplyParameters(targetChatId, it, allowSendingWithoutReply = true) },
                 )
             }.getOrNull()

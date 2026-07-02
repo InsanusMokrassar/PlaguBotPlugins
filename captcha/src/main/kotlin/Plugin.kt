@@ -44,6 +44,7 @@ import dev.inmo.tgbotapi.types.chat.RestrictionsChatPermissions
 import dev.inmo.tgbotapi.types.chat.User
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
 import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
+import dev.inmo.tgbotapi.types.message.abstracts.ChatMessage
 import dev.inmo.tgbotapi.utils.buildEntities
 import dev.inmo.tgbotapi.utils.link
 import dev.inmo.tgbotapi.utils.mention
@@ -188,7 +189,7 @@ class CaptchaBotPlugin : Plugin {
         suspend fun Chat.settings() = repo.getById(id) ?: repo.create(ChatSettings(id)).first()
 
         suspend fun doCaptcha(
-            msg: AccessibleMessage?,
+            msg: ChatMessage?,
             chat: GroupChat,
             users: List<User>,
             joinRequest: Boolean

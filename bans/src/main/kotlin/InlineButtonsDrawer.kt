@@ -21,12 +21,14 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitTextMessa
 import dev.inmo.tgbotapi.extensions.behaviour_builder.oneOf
 import dev.inmo.tgbotapi.extensions.behaviour_builder.parallel
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.utils.chatMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.libraries.cache.admins.AdminsCacheAPI
 import dev.inmo.tgbotapi.requests.send.SendTextMessage
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.UserId
+import dev.inmo.tgbotapi.types.message.abstracts.ChatMessage
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
 import dev.inmo.tgbotapi.utils.botCommand
@@ -142,7 +144,7 @@ internal class BansInlineButtonsDrawer(
         )
 
         if (needNewMessage) {
-            reply(query.message, "Updated")
+            reply(query.message.chatMessageOrNull() ?: error("Message is expected to be an accessible ChatMessage"), "Updated")
         }
 
         runCatchingLogging { drawInlineButtons(chatId, query.user.id, query.message.messageId, InlineButtonsKeys.Settings) }

@@ -142,7 +142,7 @@ class BanPlugin : Plugin {
         val chatsSettings = koin.get<ChatsSettingsTable>(named("chatsSettingsTable"))
         val adminsApi = koin.get<AdminsCacheAPI>()
 
-        suspend fun sayUserHisWarnings(message: AccessibleMessage, userInReply: Either<User, ChannelChat>, settings: ChatSettings, warnings: Long) {
+        suspend fun sayUserHisWarnings(message: ChatMessage, userInReply: Either<User, ChannelChat>, settings: ChatSettings, warnings: Long) {
             reply(
                 message
             ) {
@@ -157,7 +157,7 @@ class BanPlugin : Plugin {
             }
         }
         suspend fun BehaviourContext.getChatSettings(
-            fromMessage: AccessibleMessage,
+            fromMessage: ChatMessage,
             sentByAdmin: Boolean
         ): ChatSettings? {
             val chatSettings = chatsSettings.get(fromMessage.chat.id) ?: ChatSettings()

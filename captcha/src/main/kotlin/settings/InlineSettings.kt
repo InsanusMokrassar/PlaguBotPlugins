@@ -23,6 +23,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitTextMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.chatIdOrNull
+import dev.inmo.tgbotapi.extensions.utils.chatMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.ifChatId
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
@@ -30,6 +31,7 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
+import dev.inmo.tgbotapi.types.message.abstracts.ChatMessage
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
 import dev.inmo.tgbotapi.utils.row
 import korlibs.time.seconds
@@ -298,7 +300,7 @@ class InlineSettings(
                     "$title: You should type number${if (minMax == null) "" else " in range $minMax"} or use /cancel"
                 }
 
-                val sentMessage = reply(it.message) {
+                val sentMessage = reply(it.message.chatMessageOrNull() ?: error("Message is expected to be an accessible ChatMessage")) {
                     +"$title: Type number${if (minMax == null) "" else " in range $minMax"} or use /cancel"
                 }
 
