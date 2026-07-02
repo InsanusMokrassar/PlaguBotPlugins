@@ -19,6 +19,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitAnyConten
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.types.message.abstracts.ChatMessage
+import dev.inmo.tgbotapi.extensions.utils.chatMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
@@ -85,12 +86,12 @@ internal class WelcomeInlineButtons(
                     getMessageData -> {
                         welcomeTable.get(chatId) ?.let { settings ->
                             reply(
-                                it.message as ChatMessage,
+                                it.message.chatMessageOrNull() ?: error("Message is expected to be an accessible ChatMessage"),
                                 fromChatId = settings.sourceChatId,
                                 messageId = settings.sourceMessageId
                             )
                         } ?: let { _ ->
-                            reply(it.message as ChatMessage) {
+                            reply(it.message.chatMessageOrNull() ?: error("Message is expected to be an accessible ChatMessage")) {
                                 +"Currently welcome message is not set"
                             }
                         }
@@ -134,7 +135,7 @@ internal class WelcomeInlineButtons(
                     unsetMessageData -> {
                         val deletedSettings = welcomeTable.unset(chatId)
 
-                        reply(it.message as ChatMessage) {
+                        reply(it.message.chatMessageOrNull() ?: error("Message is expected to be an accessible ChatMessage")) {
                             if (deletedSettings != null) {
                                 +"Set request has been cancelled"
                             } else {

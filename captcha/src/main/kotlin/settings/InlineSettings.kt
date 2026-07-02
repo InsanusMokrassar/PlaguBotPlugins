@@ -23,6 +23,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitTextMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.chatIdOrNull
+import dev.inmo.tgbotapi.extensions.utils.chatMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.ifChatId
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
@@ -299,7 +300,7 @@ class InlineSettings(
                     "$title: You should type number${if (minMax == null) "" else " in range $minMax"} or use /cancel"
                 }
 
-                val sentMessage = reply(it.message as ChatMessage) {
+                val sentMessage = reply(it.message.chatMessageOrNull() ?: error("Message is expected to be an accessible ChatMessage")) {
                     +"$title: Type number${if (minMax == null) "" else " in range $minMax"} or use /cancel"
                 }
 
