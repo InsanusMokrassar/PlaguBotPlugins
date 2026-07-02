@@ -5,12 +5,12 @@ import dev.inmo.plagubot.plugins.bans.models.ChatSettings
 import dev.inmo.plagubot.plugins.bans.models.WorkMode
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
-import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
+import dev.inmo.tgbotapi.types.message.abstracts.ChatMessage
 import dev.inmo.tgbotapi.types.message.abstracts.Message
 import dev.inmo.tgbotapi.utils.botCommand
 
 internal suspend fun BehaviourContext.checkBanPluginEnabled(
-    sourceMessage: AccessibleMessage,
+    sourceMessage: ChatMessage,
     chatSettings: ChatSettings,
     fromAdmin: Boolean
 ): Boolean {

@@ -8,6 +8,7 @@ import dev.inmo.tgbotapi.extensions.api.send.copyMessage
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.ReplyParameters
+import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -40,7 +41,7 @@ internal suspend fun ChatSettings.sendWelcome(
                 )
                 bot.copyMessage(
                     targetChatId,
-                    forwarded,
+                    forwarded as AccessibleMessage,
                     replyParameters = replyTo ?.let { ReplyParameters(targetChatId, it, allowSendingWithoutReply = true) },
                 )
             }.getOrNull()

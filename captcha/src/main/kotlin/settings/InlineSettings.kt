@@ -30,6 +30,7 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
+import dev.inmo.tgbotapi.types.message.abstracts.ChatMessage
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
 import dev.inmo.tgbotapi.utils.row
 import korlibs.time.seconds
@@ -298,7 +299,7 @@ class InlineSettings(
                     "$title: You should type number${if (minMax == null) "" else " in range $minMax"} or use /cancel"
                 }
 
-                val sentMessage = reply(it.message) {
+                val sentMessage = reply(it.message as ChatMessage) {
                     +"$title: Type number${if (minMax == null) "" else " in range $minMax"} or use /cancel"
                 }
 

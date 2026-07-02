@@ -18,6 +18,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitAnyContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
+import dev.inmo.tgbotapi.types.message.abstracts.ChatMessage
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
@@ -84,12 +85,12 @@ internal class WelcomeInlineButtons(
                     getMessageData -> {
                         welcomeTable.get(chatId) ?.let { settings ->
                             reply(
-                                it.message,
+                                it.message as ChatMessage,
                                 fromChatId = settings.sourceChatId,
                                 messageId = settings.sourceMessageId
                             )
                         } ?: let { _ ->
-                            reply(it.message) {
+                            reply(it.message as ChatMessage) {
                                 +"Currently welcome message is not set"
                             }
                         }
@@ -133,7 +134,7 @@ internal class WelcomeInlineButtons(
                     unsetMessageData -> {
                         val deletedSettings = welcomeTable.unset(chatId)
 
-                        reply(it.message) {
+                        reply(it.message as ChatMessage) {
                             if (deletedSettings != null) {
                                 +"Set request has been cancelled"
                             } else {
