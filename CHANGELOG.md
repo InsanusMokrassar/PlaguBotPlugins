@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.28.0
+
+* `Versions`:
+  * `PlaguBot`: `12.0.0` -> `13.0.0`
+  * `KSLog`: `1.6.1` -> `1.7.0`
+  * `MicroUtils`: `0.30.0` -> `0.30.1`
+  * `TelegramBotAPILibraries`: `0.31.0` -> `0.32.0`
+  * `nmcp`: `1.6.0` -> `1.6.1`
+
 ## 0.27.0
 
 * `Versions`:
