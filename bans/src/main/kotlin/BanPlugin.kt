@@ -233,9 +233,7 @@ class BanPlugin : Plugin {
                     reply(
                         commandMessage
                     ) {
-                        admins.filter {
-                            it.user !is Bot
-                        }.let { usersAdmins ->
+                        admins.let { usersAdmins ->
                             usersAdmins.mapIndexed { i, it ->
                                 mention("${it.user.lastName} ${it.user.firstName}", it.user)
                                 if (usersAdmins.lastIndex != i) {
